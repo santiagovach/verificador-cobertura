@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.vercel/
+
+# Variables de entorno (nunca commitear)
+.env
+.env.local
+*.key.json
+service-account*.json
+
+# Generado en build — no commitear
+src/data/coverage.json
+
+# Archivo INEGI local (grande, no va en repo)
+data/municipios-mexico.geojson

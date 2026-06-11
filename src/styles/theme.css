@@ -1,0 +1,101 @@
+/* Brandbook MoradaUno — Paleta de colores (pág. 12) y tipografías (pág. 11) */
+
+:root {
+  /* Primarios */
+  --mu-purple-primary:  #671E75;   /* PMS 2613 C — color principal */
+  --mu-purple-mid:      #772583;   /* PMS 2612 C */
+  --mu-purple-light:    #B14EB5;   /* PMS 2068 C — acentos */
+  --mu-purple-dark:     #330248;   /* PMS 2627C  — énfasis oscuro */
+
+  /* Neutros */
+  --mu-neutral-50:  #F7F5F9;
+  --mu-neutral-100: #E6E7E8;
+  --mu-neutral-200: #BCBEC0;
+  --mu-neutral-400: #6B6B78;
+  --mu-neutral-900: #12051A;
+
+  /* Semánticos UI */
+  --mu-bg:          #FFFFFF;
+  --mu-bg-subtle:   #F7F5F9;
+  --mu-text:        #12051A;
+  --mu-text-muted:  #6B6B78;
+  --mu-border:      #E6E7E8;
+
+  /* Estados */
+  --mu-success:     #1A7A4A;
+  --mu-success-bg:  #E8F5EE;
+  --mu-success-border: #6EE7A0;
+  --mu-error:       #B91C1C;
+  --mu-error-bg:    #FEF2F2;
+  --mu-warning-bg:  #FFF8E7;
+  --mu-warning:     #92400E;
+
+  /* Mapa */
+  --mu-map-fill:    #671E75;
+  --mu-map-stroke:  #4A1654;
+
+  /* Tipografías */
+  --mu-font-ui:      'Figtree', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mu-font-display: 'Merriweather', Georgia, serif;
+
+  /* Forma */
+  --mu-radius:    12px;
+  --mu-radius-sm: 8px;
+  --mu-radius-xs: 6px;
+
+  /* Sombras */
+  --mu-shadow:    0 4px 24px rgba(103, 30, 117, 0.10);
+  --mu-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --mu-shadow-lg: 0 16px 48px rgba(18, 5, 26, 0.16);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--mu-font-ui);
+  background: var(--mu-bg);
+  color: var(--mu-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: var(--mu-font-ui);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input {
+  font-family: var(--mu-font-ui);
+}
+
+/* Clase utilitaria para el spinner de carga */
+@keyframes mu-spin {
+  to { transform: rotate(360deg); }
+}
+
+.mu-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: mu-spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
