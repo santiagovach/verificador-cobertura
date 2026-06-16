@@ -90,7 +90,8 @@ async function geocode(query, isCP = false) {
       lat: loc?.lat() ?? null,
       lng: loc?.lng() ?? null,
     }
-  } catch {
+  } catch (e) {
+    console.log('[geocode] error', query, e)
     return null
   }
 }
