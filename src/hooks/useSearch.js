@@ -69,6 +69,7 @@ async function geocode(query, isCP = false) {
 
   try {
     const { results } = await geocoder.geocode(request)
+    console.log('[geocode]', query, results?.[0]?.formatted_address, results?.[0]?.geometry?.location?.lat(), results?.[0]?.geometry?.location?.lng())
     if (!results?.[0]) return null
 
     const components = results[0].address_components || []
