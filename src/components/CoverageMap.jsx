@@ -112,8 +112,10 @@ function CoverageLayer({ searchResult }) {
       </svg>
     `
 
+    const position = { lat: searchResult.lat, lng: searchResult.lng }
+
     const marker = new g.Marker({
-      position: { lat: searchResult.lat, lng: searchResult.lng },
+      position,
       map,
       icon: {
         url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(pinSvg)}`,
@@ -124,6 +126,8 @@ function CoverageLayer({ searchResult }) {
       animation: g.Animation.DROP,
     })
 
+    map.panTo(position)
+    map.setZoom(14)
     markerRef.current = marker
 
     return () => {
