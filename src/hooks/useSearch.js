@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
 
 const CP_REGEX = /^\d{5}$/
-const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 // Normalize string for fuzzy matching (remove accents, lowercase)
 function normalize(str) {
@@ -54,35 +53,38 @@ function findCoveredMunicipality(googleMunicipio, googleEstado) {
 }
 
 async function geocode(query, isCP = false) {
-  const params = isCP
-    ? `components=postal_code:${query}|country:MX`
-    : `address=${encodeURIComponent(query)}&components=country:MX`
+  const g = window.google?.maps
+  if (!g) return null
 
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?${params}&key=${MAPS_KEY}`
-  const res = await fetch(url)
-  const data = await res.json()
+  const geocoder = new g.Geocoder()
+  const request = isCP
+    ? { componentRestrictions: { country: 'MX', postalCode: query } }
+    : { address: query, componentRestrictions: { country: 'MX' } }
 
-  if (data.status !== 'OK' || !data.results?.[0]) return null
+  try {
+    const { results } = await geocoder.geocode(request)
+    if (!results?.[0]) return null
 
-  const result = data.results[0]
-  const components = result.address_components || []
-  const loc = result.geometry?.location
+    const components = results[0].address_components || []
+    const loc = results[0].geometry?.location
 
-  const get = (...types) => {
-    for (const type of types) {
-      const c = components.find(c => c.types.includes(type))
-      if (c) return c.long_name
+    const get = (...types) => {
+      for (const type of types) {
+        const c = components.find(c => c.types.includes(type))
+        if (c) return c.long_name
+      }
+      return null
     }
-    return null
-  }
 
-  return {
-    cp: get('postal_code'),
-    // For Mexican addresses, municipality is usually in locality or admin_level_2
-    municipio: get('locality', 'administrative_area_level_2', 'sublocality_level_1'),
-    estado: get('administrative_area_level_1'),
-    lat: loc?.lat ?? null,
-    lng: loc?.lng ?? null,
+    return {
+      cp: get('postal_code'),
+      municipio: get('locality', 'administrative_area_level_2', 'sublocality_level_1'),
+      estado: get('administrative_area_level_1'),
+      lat: loc?.lat() ?? null,
+      lng: loc?.lng() ?? null,
+    }
+  } catch {
+    return null
   }
 }
 
