@@ -69,7 +69,6 @@ async function geocode(query, isCP = false) {
 
   try {
     const { results } = await geocoder.geocode(request)
-    console.log('[geocode]', query, results?.[0]?.formatted_address, results?.[0]?.geometry?.location?.lat(), results?.[0]?.geometry?.location?.lng())
     if (!results?.[0]) return null
 
     const components = results[0].address_components || []
@@ -90,8 +89,7 @@ async function geocode(query, isCP = false) {
       lat: loc?.lat() ?? null,
       lng: loc?.lng() ?? null,
     }
-  } catch (e) {
-    console.log('[geocode] error', query, e)
+  } catch {
     return null
   }
 }
@@ -138,6 +136,11 @@ export function useSearch() {
       // 1. Exact CP match in the Sheet
       const exactEntry = coverageData.byCp[cp]
       if (exactEntry) {
+        // If CP geocoding failed, try geocoding by municipality name for approximate pin location
+        if (!lat && !lng) {
+          const fallback = await geocode(`${exactEntry.municipio}, ${exactEntry.estado}, México`)
+          if (fallback) { lat = fallback.lat; lng = fallback.lng }
+        }
         setResult({
           hasCoverage: true,
           cp,
