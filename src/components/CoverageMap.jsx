@@ -135,9 +135,9 @@ function CoverageLayer({ searchResult }) {
     }
   }, [map, searchResult])
 
-  // Zoom to searched municipality
+  // Zoom to searched municipality (only when no exact coordinates — pin centering takes priority)
   useEffect(() => {
-    if (!map || !loaded || !searchResult?.municipio) return
+    if (!map || !loaded || !searchResult?.municipio || searchResult?.lat) return
     if (!dataLayerRef.current) return
 
     const g = window.google?.maps
