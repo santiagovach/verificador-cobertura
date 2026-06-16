@@ -53,7 +53,13 @@ function findCoveredMunicipality(googleMunicipio, googleEstado) {
 }
 
 async function geocode(query, isCP = false) {
-  const g = window.google?.maps
+  let g = window.google?.maps
+  if (!g) {
+    for (let i = 0; i < 20 && !g; i++) {
+      await new Promise(r => setTimeout(r, 150))
+      g = window.google?.maps
+    }
+  }
   if (!g) return null
 
   const geocoder = new g.Geocoder()
