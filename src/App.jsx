@@ -144,30 +144,32 @@ export default function App() {
           </main>
         )}
 
-        <footer
-          style={{
-            padding: '16px 24px',
-            borderTop: '1px solid var(--mu-border)',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <button
-            onClick={() => setShowAdmin(true)}
+        {isAdmin && (
+          <footer
             style={{
-              fontSize: '12px',
-              color: 'var(--mu-neutral-400)',
-              padding: '4px 10px',
-              borderRadius: 'var(--mu-radius-xs)',
-              opacity: 0.7,
-              transition: 'opacity 0.15s',
+              padding: '16px 24px',
+              borderTop: '1px solid var(--mu-border)',
+              display: 'flex',
+              justifyContent: 'center',
             }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}
           >
-            Actualizar cobertura
-          </button>
-        </footer>
+            <button
+              onClick={() => setShowAdmin(true)}
+              style={{
+                fontSize: '12px',
+                color: 'var(--mu-neutral-400)',
+                padding: '4px 10px',
+                borderRadius: 'var(--mu-radius-xs)',
+                opacity: 0.7,
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}
+            >
+              Actualizar cobertura
+            </button>
+          </footer>
+        )}
 
       </div>
 

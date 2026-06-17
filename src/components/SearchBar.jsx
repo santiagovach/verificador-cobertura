@@ -1,8 +1,33 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useMapsLibrary } from '@vis.gl/react-google-maps'
 
 export default function SearchBar({ onSearch, isLoading }) {
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
+  const inputRef = useRef(null)
+  const places = useMapsLibrary('places')
+
+  useEffect(() => {
+    if (!places || !inputRef.current) return
+
+    const ac = new places.Autocomplete(inputRef.current, {
+      componentRestrictions: { country: 'mx' },
+      types: ['geocode'],
+      fields: ['formatted_address'],
+    })
+
+    const listener = ac.addListener('place_changed', () => {
+      const place = ac.getPlace()
+      if (place?.formatted_address) {
+        setQuery(place.formatted_address)
+        onSearch(place.formatted_address)
+      }
+    })
+
+    return () => {
+      window.google.maps.event.removeListener(listener)
+    }
+  }, [places]) // onSearch is stable (useCallback with no deps)
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -46,6 +71,7 @@ export default function SearchBar({ onSearch, isLoading }) {
         }}
       >
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
