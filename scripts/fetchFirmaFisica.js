@@ -60,10 +60,16 @@ async function main() {
   const coveragePath = join(__dirname, '..', 'src', 'data', 'coverage.json')
   const coverage = JSON.parse(readFileSync(coveragePath, 'utf8'))
 
+  // Solo CDMX, Querétaro y Jalisco (GDL)
+  function isAllowedEstado(estado) {
+    const n = (estado || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+    return n.includes('ciudad de mexico') || n.includes('queretaro') || n.includes('jalisco')
+  }
+
   const byCp = {}
   const munSet = {}
 
-  let total = 0, conCP = 0, sinMatch = 0
+  let total = 0, conCP = 0, sinMatch = 0, fueraDeZona = 0
 
   for (const r of rows.slice(1)) {
     const tipo = (r[tipoIdx] || '').toLowerCase().trim()
@@ -77,6 +83,8 @@ async function main() {
     const cp = cpMatch[1]
     const entry = coverage.byCp[cp]
     if (!entry) { sinMatch++; continue }
+
+    if (!isAllowedEstado(entry.estado)) { fueraDeZona++; continue }
 
     conCP++
     if (!byCp[cp]) {
@@ -100,7 +108,7 @@ async function main() {
   writeFileSync(outPath, JSON.stringify(result))
 
   console.log(`✅ firmaFisica.json generado: ${result.totalCPs} CPs, ${result.totalMunicipios} municipios`)
-  console.log(`   (${total} presenciales procesadas, ${conCP} con CP en cobertura, ${sinMatch} sin match)`)
+  console.log(`   (${total} presenciales procesadas, ${conCP} con CP en cobertura, ${sinMatch} sin match, ${fueraDeZona} fuera de zona)`)
 }
 
 main().catch(e => {
