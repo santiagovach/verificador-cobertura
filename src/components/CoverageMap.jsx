@@ -22,6 +22,15 @@ const FIRMA_STYLE = {
   cursor: 'pointer',
 }
 
+const FIRMA_REVISAR_STYLE = {
+  fillColor: '#7DD3FC',
+  fillOpacity: 0.2,
+  strokeColor: '#7DD3FC',
+  strokeWeight: 1,
+  strokeOpacity: 0.5,
+  cursor: 'pointer',
+}
+
 function MapTooltip({ content, position }) {
   if (!content) return null
   return (
@@ -70,7 +79,8 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
 
     const addTooltip = (l) => {
       l.addListener('mouseover', e => {
-        l.overrideStyle(e.feature, { fillOpacity: 0.7, strokeWeight: 2 })
+        const isRevisar = l === firmaLayerRef.current && e.feature.getProperty('requiresReview')
+        l.overrideStyle(e.feature, { fillOpacity: isRevisar ? 0.35 : 0.7, strokeWeight: 2 })
         const municipio = e.feature.getProperty('municipio')
         const estado = e.feature.getProperty('estado')
         const tag = l === firmaLayerRef.current ? ' · Firma física' : ''
@@ -96,7 +106,9 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
     const firmaLayer = new g.Data({ map })
     firmaLayerRef.current = firmaLayer
     firmaLayer.loadGeoJson('/firma-fisica-municipalities.geojson')
-    firmaLayer.setStyle(FIRMA_STYLE)
+    firmaLayer.setStyle(feature =>
+      feature.getProperty('requiresReview') ? FIRMA_REVISAR_STYLE : FIRMA_STYLE
+    )
     addTooltip(firmaLayer)
 
     return () => {

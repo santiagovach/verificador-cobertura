@@ -91,9 +91,10 @@ function main() {
       const key = `${normalize(match.municipio)}|||${match.normalizedEstado}`
       if (matchedKeys.has(key)) continue
       matchedKeys.add(key)
+      const requiresReview = normalize(match.estado) === 'mexico' || normalize(match.estado) === 'estado de mexico'
       matched.push({
         ...feature,
-        properties: { municipio: match.municipio, estado: match.estado, firmaFisica: true },
+        properties: { municipio: match.municipio, estado: match.estado, firmaFisica: true, requiresReview },
       })
     }
   }
