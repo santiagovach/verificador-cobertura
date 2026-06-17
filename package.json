@@ -9,7 +9,8 @@
     "fetch-coverage": "node --env-file=.env.local scripts/fetchCoverage.js",
     "fetch-firma-fisica": "node --env-file=.env.local scripts/fetchFirmaFisica.js",
     "filter-municipalities": "node scripts/filterMunicipalities.js",
-    "filter-firma-fisica": "node scripts/filterFirmaFisica.js"
+    "filter-firma-fisica": "node scripts/filterFirmaFisica.js",
+    "fetch-municipios-osm": "node scripts/fetchMunicipiosOSM.js"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.1",

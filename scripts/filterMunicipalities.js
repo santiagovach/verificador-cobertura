@@ -77,12 +77,18 @@ function main() {
   console.log(`   ${inegi.features.length} municipios en INEGI`)
   console.log(`   ${coverage.municipalities.length} municipios con cobertura en Sheet`)
 
-  // Aliases: nombre en el Sheet → nombre en el GeoJSON
+  // Aliases: nombre en el Sheet (normalizado) → nombre en el GeoJSON OSM (normalizado)
+  // OSM usa "Municipio de X" para ciudades que comparten nombre con su estado o municipio
   const MUNICIPIO_ALIASES = {
-    'la magdalena contreras': 'magdalena contreras',
-    'tlalnepantla de baz': 'tlalnepantla',
-    'el carmen': 'carmen',
-    'san pedro tlaquepaque': 'tlaquepaque',
+    'puebla': 'municipio de puebla',
+    'queretaro': 'municipio de queretaro',
+    'ensenada': 'municipio de ensenada',
+    'mexicali': 'municipio de mexicali',
+    'tijuana': 'municipio de tijuana',
+    'tecate': 'municipio de tecate',
+    'playas de rosarito': 'municipio de playas de rosarito',
+    'san quintin': 'municipio de san quintin',
+    'san felipe': 'municipio de san felipe',
   }
 
   // Index de municipios cubiertos: normalizedMun → { municipio, estado }

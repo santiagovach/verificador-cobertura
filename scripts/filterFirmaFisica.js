@@ -36,10 +36,15 @@ const ESTADO_TO_GEOJSON = {
 }
 
 const MUNICIPIO_ALIASES = {
-  'la magdalena contreras': 'magdalena contreras',
-  'tlalnepantla de baz': 'tlalnepantla',
-  'el carmen': 'carmen',
-  'san pedro tlaquepaque': 'tlaquepaque',
+  'puebla': 'municipio de puebla',
+  'queretaro': 'municipio de queretaro',
+  'ensenada': 'municipio de ensenada',
+  'mexicali': 'municipio de mexicali',
+  'tijuana': 'municipio de tijuana',
+  'tecate': 'municipio de tecate',
+  'playas de rosarito': 'municipio de playas de rosarito',
+  'san quintin': 'municipio de san quintin',
+  'san felipe': 'municipio de san felipe',
 }
 
 function main() {
