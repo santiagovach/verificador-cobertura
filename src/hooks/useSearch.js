@@ -56,21 +56,31 @@ const firmaFisicaMunicipalityMap = {}
 
 for (const { municipio, estado } of firmaFisicaData.municipalities) {
   const key = `${normalize(municipio)}|||${normalize(estado)}`
-  firmaFisicaMunicipalityMap[key] = true
+  firmaFisicaMunicipalityMap[key] = { municipio, estado }
+}
+
+function firmaFisicaStatus(estado) {
+  const n = normalize(estado)
+  // Edomex: municipalities bordering CDMX that require revenue review
+  if (n === 'mexico' || n === 'estado de mexico') return 'revisar'
+  return 'disponible'
 }
 
 function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
   // 1. Exact CP match
-  if (cp && firmaFisicaData.byCp[cp]) return true
+  if (cp && firmaFisicaData.byCp[cp]) {
+    return firmaFisicaStatus(firmaFisicaData.byCp[cp].estado)
+  }
 
   // 2. Municipality fallback
   if (geocodedMunicipio && geocodedEstado) {
     const normMun = normalize(geocodedMunicipio)
     const normEst = normalizeState(geocodedEstado)
-    if (firmaFisicaMunicipalityMap[`${normMun}|||${normEst}`]) return true
+    const entry = firmaFisicaMunicipalityMap[`${normMun}|||${normEst}`]
+    if (entry) return firmaFisicaStatus(entry.estado)
   }
 
-  return false
+  return null
 }
 
 // ─── Geocoding ────────────────────────────────────────────────────────────────
@@ -165,7 +175,7 @@ export function useSearch() {
         }
         setResult({
           hasCoverage: true,
-          hasFirmaFisica: checkFirmaFisica(cp, exactEntry.municipio, exactEntry.estado),
+          firmaFisicaStatus: checkFirmaFisica(cp, exactEntry.municipio, exactEntry.estado),
           cp,
           municipio: exactEntry.municipio,
           estado: exactEntry.estado,
@@ -181,7 +191,7 @@ export function useSearch() {
         if (munMatch) {
           setResult({
             hasCoverage: true,
-            hasFirmaFisica: checkFirmaFisica(cp, munMatch.municipio, munMatch.estado),
+            firmaFisicaStatus: checkFirmaFisica(cp, munMatch.municipio, munMatch.estado),
             cp,
             municipio: munMatch.municipio,
             estado: munMatch.estado,
@@ -195,7 +205,7 @@ export function useSearch() {
       // 3. No coverage
       setResult({
         hasCoverage: false,
-        hasFirmaFisica: false,
+        firmaFisicaStatus: null,
         cp,
         municipio: geocodedMunicipio,
         estado: geocodedEstado,

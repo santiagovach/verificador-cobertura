@@ -1,7 +1,7 @@
 export default function ResultBanner({ result }) {
   if (!result) return null
 
-  const { hasCoverage, hasFirmaFisica, cp, municipio, estado, error } = result
+  const { hasCoverage, firmaFisicaStatus, cp, municipio, estado, error } = result
 
   if (error) {
     return (
@@ -64,16 +64,18 @@ export default function ResultBanner({ result }) {
         {/* Bullet 2: Firma física (solo si hay cobertura general) */}
         {hasCoverage && (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <span style={{ fontSize: '15px', color: hasFirmaFisica ? '#0284C7' : 'var(--mu-text-muted)' }}>●</span>
+            <span style={{ fontSize: '15px', color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' ? '#D97706' : 'var(--mu-text-muted)' }}>●</span>
             <p style={{
               fontSize: '15px',
               fontWeight: '600',
-              color: hasFirmaFisica ? '#0284C7' : 'var(--mu-text-muted)',
+              color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' ? '#D97706' : 'var(--mu-text-muted)',
               fontFamily: 'var(--mu-font-ui)',
             }}>
               Firma presencial:{' '}
-              <span style={{ fontWeight: hasFirmaFisica ? '700' : '400' }}>
-                {hasFirmaFisica ? 'Disponible' : 'No disponible'}
+              <span style={{ fontWeight: firmaFisicaStatus ? '700' : '400' }}>
+                {firmaFisicaStatus === 'disponible' ? 'Disponible'
+                  : firmaFisicaStatus === 'revisar' ? 'Revisar disponibilidad por revenue'
+                  : 'No disponible'}
               </span>
             </p>
           </div>
