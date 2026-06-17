@@ -91,7 +91,10 @@ function main() {
       const key = `${normalize(match.municipio)}|||${match.normalizedEstado}`
       if (matchedKeys.has(key)) continue
       matchedKeys.add(key)
-      const requiresReview = normalize(match.estado) === 'mexico' || normalize(match.estado) === 'estado de mexico'
+      const REVISAR_MUNICIPIOS = new Set(['milpa alta', 'xochimilco', 'tlahuac'])
+      const normEst = normalize(match.estado)
+      const normMun = normalize(match.municipio)
+      const requiresReview = normEst === 'mexico' || normEst === 'estado de mexico' || REVISAR_MUNICIPIOS.has(normMun)
       matched.push({
         ...feature,
         properties: { municipio: match.municipio, estado: match.estado, firmaFisica: true, requiresReview },

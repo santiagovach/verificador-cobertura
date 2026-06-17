@@ -59,17 +59,21 @@ for (const { municipio, estado } of firmaFisicaData.municipalities) {
   firmaFisicaMunicipalityMap[key] = { municipio, estado }
 }
 
-function firmaFisicaStatus(estado) {
-  const n = normalize(estado)
-  // Edomex: municipalities bordering CDMX that require revenue review
-  if (n === 'mexico' || n === 'estado de mexico') return 'revisar'
+const REVISAR_MUNICIPIOS = new Set(['milpa alta', 'xochimilco', 'tlahuac'])
+
+function firmaFisicaStatus(municipio, estado) {
+  const normEst = normalize(estado)
+  const normMun = normalize(municipio)
+  if (normEst === 'mexico' || normEst === 'estado de mexico') return 'revisar'
+  if (REVISAR_MUNICIPIOS.has(normMun)) return 'revisar'
   return 'disponible'
 }
 
 function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
   // 1. Exact CP match
   if (cp && firmaFisicaData.byCp[cp]) {
-    return firmaFisicaStatus(firmaFisicaData.byCp[cp].estado)
+    const { municipio, estado } = firmaFisicaData.byCp[cp]
+    return firmaFisicaStatus(municipio, estado)
   }
 
   // 2. Municipality fallback
@@ -77,7 +81,7 @@ function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
     const normMun = normalize(geocodedMunicipio)
     const normEst = normalizeState(geocodedEstado)
     const entry = firmaFisicaMunicipalityMap[`${normMun}|||${normEst}`]
-    if (entry) return firmaFisicaStatus(entry.estado)
+    if (entry) return firmaFisicaStatus(entry.municipio, entry.estado)
   }
 
   return null
