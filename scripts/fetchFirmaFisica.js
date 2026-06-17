@@ -60,10 +60,10 @@ async function main() {
   const coveragePath = join(__dirname, '..', 'src', 'data', 'coverage.json')
   const coverage = JSON.parse(readFileSync(coveragePath, 'utf8'))
 
-  // Solo CDMX, Querétaro y Jalisco (GDL)
+  // Excluir solo Monterrey (Nuevo León) y Tijuana (Baja California)
   function isAllowedEstado(estado) {
     const n = (estado || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
-    return n.includes('ciudad de mexico') || n.includes('queretaro') || n.includes('jalisco')
+    return !n.includes('nuevo leon') && !n.includes('baja california')
   }
 
   const byCp = {}
