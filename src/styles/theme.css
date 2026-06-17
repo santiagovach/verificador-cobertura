@@ -1,52 +1,53 @@
-/* Brandbook MoradaUno — Paleta de colores (pág. 12) y tipografías (pág. 11) */
+/* MoradaUno Design System — paleta interna/asesores (morado) */
 
 :root {
-  /* Primarios */
-  --mu-purple-primary:  #671E75;   /* PMS 2613 C — color principal */
-  --mu-purple-mid:      #772583;   /* PMS 2612 C */
-  --mu-purple-light:    #B14EB5;   /* PMS 2068 C — acentos */
-  --mu-purple-dark:     #330248;   /* PMS 2627C  — énfasis oscuro */
+  /* Paleta morado — tokens brandbook */
+  --mu-purple-primary: #832694;   /* brand-600 — interactivo principal */
+  --mu-purple-mid:     #4A1655;   /* brand-900 — hover */
+  --mu-purple-light:   #B14EB5;   /* brand-500 — acentos */
+  --mu-purple-dark:    #671E75;   /* brand-800 — mapa, íconos */
 
-  /* Neutros */
-  --mu-neutral-50:  #F7F5F9;
-  --mu-neutral-100: #E6E7E8;
-  --mu-neutral-200: #BCBEC0;
-  --mu-neutral-400: #6B6B78;
-  --mu-neutral-900: #12051A;
+  /* Neutros — brandbook */
+  --mu-neutral-50:  #FAFAFA;
+  --mu-neutral-100: #F2F2F7;
+  --mu-neutral-200: #CCCCCC;
+  --mu-neutral-400: #808080;
+  --mu-neutral-900: #171717;
 
   /* Semánticos UI */
-  --mu-bg:          #FFFFFF;
-  --mu-bg-subtle:   #F7F5F9;
-  --mu-text:        #12051A;
-  --mu-text-muted:  #6B6B78;
-  --mu-border:      #E6E7E8;
+  --mu-bg:             #FFFFFF;
+  --mu-bg-subtle:      #F9F5FA;   /* brand-50 */
+  --mu-text:           #171717;   /* text-primary */
+  --mu-text-muted:     #808080;   /* text-tertiary */
+  --mu-text-secondary: #433E47;   /* text-secondary */
+  --mu-border:         #CCCCCC;   /* n200 */
 
-  /* Estados */
-  --mu-success:     #1A7A4A;
-  --mu-success-bg:  #E8F5EE;
-  --mu-success-border: #6EE7A0;
-  --mu-error:       #B91C1C;
-  --mu-error-bg:    #FEF2F2;
-  --mu-warning-bg:  #FFF8E7;
-  --mu-warning:     #92400E;
+  /* Estados — brandbook */
+  --mu-success:        #1E811E;
+  --mu-success-bg:     #F5FAF5;
+  --mu-success-border: #CDEECD;
+  --mu-error:          #DC2626;
+  --mu-error-bg:       #FEF2F2;
+  --mu-warning-bg:     #FFFBEB;
+  --mu-warning:        #D97706;
 
-  /* Mapa */
-  --mu-map-fill:    #671E75;
-  --mu-map-stroke:  #4A1654;
+  /* Mapa — colores exactos de los polígonos */
+  --mu-map-fill:   #671E75;
+  --mu-map-stroke: #4A1655;
 
-  /* Tipografías */
-  --mu-font-ui:      'Figtree', -apple-system, BlinkMacSystemFont, sans-serif;
-  --mu-font-display: 'Merriweather', Georgia, serif;
+  /* Tipografía — solo Figtree (brandbook) */
+  --mu-font-ui:      'Figtree', -apple-system, sans-serif;
+  --mu-font-display: 'Figtree', -apple-system, sans-serif;
 
-  /* Forma */
-  --mu-radius:    12px;
-  --mu-radius-sm: 8px;
-  --mu-radius-xs: 6px;
+  /* Forma — brandbook */
+  --mu-radius:    12px;   /* rxl — botones, inputs */
+  --mu-radius-sm: 8px;    /* rmd */
+  --mu-radius-xs: 6px;    /* rsm */
 
-  /* Sombras */
-  --mu-shadow:    0 4px 24px rgba(103, 30, 117, 0.10);
-  --mu-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --mu-shadow-lg: 0 16px 48px rgba(18, 5, 26, 0.16);
+  /* Sombras — brandbook (neutrales, sin tinte morado) */
+  --mu-shadow:    0 4px 8px rgba(16,24,40,.10);
+  --mu-shadow-sm: 0 1px 3px rgba(16,24,40,.10);
+  --mu-shadow-lg: 0 12px 16px rgba(16,24,40,.10);
 }
 
 *, *::before, *::after {
@@ -83,7 +84,6 @@ input {
   font-family: var(--mu-font-ui);
 }
 
-/* Clase utilitaria para el spinner de carga */
 @keyframes mu-spin {
   to { transform: rotate(360deg); }
 }

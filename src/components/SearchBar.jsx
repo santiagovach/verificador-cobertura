@@ -41,7 +41,7 @@ export default function SearchBar({ onSearch, isLoading }) {
         style={{
           fontFamily: 'var(--mu-font-display)',
           fontSize: 'clamp(22px, 4vw, 30px)',
-          fontWeight: '900',
+          fontWeight: '800',
           color: 'var(--mu-purple-primary)',
           lineHeight: '1.2',
           marginBottom: '10px',

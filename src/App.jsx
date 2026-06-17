@@ -56,7 +56,7 @@ function LoginPrompt({ onSignIn }) {
           style={{
             fontFamily: 'var(--mu-font-display)',
             fontSize: '22px',
-            fontWeight: '900',
+            fontWeight: '800',
             color: 'var(--mu-purple-primary)',
             marginBottom: '8px',
           }}
