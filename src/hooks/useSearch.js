@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
+import firmaFisicaData from '../data/firmaFisica.json'
 
 const CP_REGEX = /^\d{5}$/
 
-// Normalize string for fuzzy matching (remove accents, lowercase)
 function normalize(str) {
   return (str || '')
     .toLowerCase()
@@ -12,7 +12,6 @@ function normalize(str) {
     .trim()
 }
 
-// Google Maps returns some state names differently than our Sheet
 const GOOGLE_STATE_NORMALIZE = {
   'distrito federal': 'ciudad de mexico',
   'ciudad de mexico': 'ciudad de mexico',
@@ -25,7 +24,8 @@ function normalizeState(googleStateName) {
   return GOOGLE_STATE_NORMALIZE[n] || n
 }
 
-// Pre-build municipality lookup and per-estado coverage set
+// ─── Cobertura de protección ──────────────────────────────────────────────────
+
 const coveredMunicipalityMap = {}
 const coveredEstadoSet = new Set()
 
@@ -39,18 +39,41 @@ function findCoveredMunicipality(googleMunicipio, googleEstado) {
   const normMun = normalize(googleMunicipio)
   const normEst = normalizeState(googleEstado)
 
-  // Direct match
   const direct = coveredMunicipalityMap[`${normMun}|||${normEst}`]
   if (direct) return direct
 
-  // CDMX special case: Google returns "Ciudad de México" as both locality and state,
-  // without returning the alcaldía. If the estado has coverage, accept it.
+  // CDMX: Google returns "Ciudad de México" as both locality and state
   if (normMun === normEst && coveredEstadoSet.has(normEst)) {
     return { municipio: googleMunicipio, estado: googleEstado }
   }
 
   return null
 }
+
+// ─── Cobertura de firma física ─────────────────────────────────────────────────
+
+const firmaFisicaMunicipalityMap = {}
+
+for (const { municipio, estado } of firmaFisicaData.municipalities) {
+  const key = `${normalize(municipio)}|||${normalize(estado)}`
+  firmaFisicaMunicipalityMap[key] = true
+}
+
+function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
+  // 1. Exact CP match
+  if (cp && firmaFisicaData.byCp[cp]) return true
+
+  // 2. Municipality fallback
+  if (geocodedMunicipio && geocodedEstado) {
+    const normMun = normalize(geocodedMunicipio)
+    const normEst = normalizeState(geocodedEstado)
+    if (firmaFisicaMunicipalityMap[`${normMun}|||${normEst}`]) return true
+  }
+
+  return false
+}
+
+// ─── Geocoding ────────────────────────────────────────────────────────────────
 
 async function geocode(query, isCP = false) {
   let g = window.google?.maps
@@ -94,6 +117,8 @@ async function geocode(query, isCP = false) {
   }
 }
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function useSearch() {
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -121,9 +146,7 @@ export function useSearch() {
       } else {
         const geo = await geocode(query)
         if (!geo?.cp) {
-          setResult({
-            error: 'No encontramos esa dirección. Prueba con un código postal de 5 dígitos.',
-          })
+          setResult({ error: 'No encontramos esa dirección. Prueba con un código postal de 5 dígitos.' })
           return
         }
         cp = geo.cp
@@ -133,32 +156,32 @@ export function useSearch() {
         geocodedEstado = geo.estado
       }
 
-      // 1. Exact CP match in the Sheet
+      // 1. Exact CP match
       const exactEntry = coverageData.byCp[cp]
       if (exactEntry) {
-        // If CP geocoding failed, try geocoding by municipality name for approximate pin location
         if (!lat && !lng) {
           const fallback = await geocode(`${exactEntry.municipio}, ${exactEntry.estado}, México`)
           if (fallback) { lat = fallback.lat; lng = fallback.lng }
         }
         setResult({
           hasCoverage: true,
+          hasFirmaFisica: checkFirmaFisica(cp, exactEntry.municipio, exactEntry.estado),
           cp,
           municipio: exactEntry.municipio,
           estado: exactEntry.estado,
-          plaza: exactEntry.plaza,
           lat,
           lng,
         })
         return
       }
 
-      // 2. Fallback: check if the geocoded municipality has coverage
+      // 2. Municipality fallback for coverage
       if (geocodedMunicipio && geocodedEstado) {
         const munMatch = findCoveredMunicipality(geocodedMunicipio, geocodedEstado)
         if (munMatch) {
           setResult({
             hasCoverage: true,
+            hasFirmaFisica: checkFirmaFisica(cp, munMatch.municipio, munMatch.estado),
             cp,
             municipio: munMatch.municipio,
             estado: munMatch.estado,
@@ -172,6 +195,7 @@ export function useSearch() {
       // 3. No coverage
       setResult({
         hasCoverage: false,
+        hasFirmaFisica: false,
         cp,
         municipio: geocodedMunicipio,
         estado: geocodedEstado,

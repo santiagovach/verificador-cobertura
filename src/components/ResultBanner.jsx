@@ -1,7 +1,7 @@
 export default function ResultBanner({ result }) {
   if (!result) return null
 
-  const { hasCoverage, cp, municipio, estado, error } = result
+  const { hasCoverage, hasFirmaFisica, cp, municipio, estado, error } = result
 
   if (error) {
     return (
@@ -40,49 +40,47 @@ export default function ResultBanner({ result }) {
         transition: 'all 0.2s',
       }}
     >
-      <span
-        style={{
-          fontSize: '32px',
-          lineHeight: 1,
-          flexShrink: 0,
-          marginTop: '2px',
-        }}
-      >
+      <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0, marginTop: '2px' }}>
         {hasCoverage ? '✅' : '😕'}
       </span>
 
-      <div>
-        <p
-          style={{
-            fontSize: '18px',
-            fontWeight: '700',
-            color: hasCoverage ? 'var(--mu-success)' : 'var(--mu-purple-dark)',
-            marginBottom: '4px',
-            fontFamily: 'var(--mu-font-ui)',
-          }}
-        >
-          {hasCoverage
-            ? `¡Tenemos cobertura en ${municipio}!`
-            : 'Por ahora no tenemos cobertura en esta zona.'}
+      <div style={{ flex: 1 }}>
+        {/* Subtitle: CP · Municipio */}
+        <p style={{ fontSize: '13px', color: 'var(--mu-text-muted)', marginBottom: '10px' }}>
+          {cp ? `CP ${cp}` : null}
+          {municipio ? ` · ${municipio}, ${estado}` : null}
         </p>
 
-        <p style={{ fontSize: '14px', color: 'var(--mu-text-muted)' }}>
-          {hasCoverage
-            ? `CP ${cp} · ${municipio}, ${estado}`
-            : cp
-            ? `CP ${cp}${municipio ? ` · ${municipio}, ${estado}` : ''}`
-            : null}
-        </p>
+        {/* Bullet 1: Cobertura de protección */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
+          <span style={{ fontSize: '15px' }}>{hasCoverage ? '●' : '○'}</span>
+          <p style={{ fontSize: '15px', fontWeight: '700', color: hasCoverage ? 'var(--mu-success)' : 'var(--mu-purple-dark)', fontFamily: 'var(--mu-font-ui)' }}>
+            {hasCoverage
+              ? `¡Tenemos cobertura en ${municipio || estado}!`
+              : 'Por ahora no tenemos cobertura en esta zona.'}
+          </p>
+        </div>
+
+        {/* Bullet 2: Firma física (solo si hay cobertura general) */}
+        {hasCoverage && (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <span style={{ fontSize: '15px', color: hasFirmaFisica ? '#0284C7' : 'var(--mu-text-muted)' }}>●</span>
+            <p style={{
+              fontSize: '15px',
+              fontWeight: '600',
+              color: hasFirmaFisica ? '#0284C7' : 'var(--mu-text-muted)',
+              fontFamily: 'var(--mu-font-ui)',
+            }}>
+              Firma presencial:{' '}
+              <span style={{ fontWeight: hasFirmaFisica ? '700' : '400' }}>
+                {hasFirmaFisica ? 'Disponible' : 'No disponible'}
+              </span>
+            </p>
+          </div>
+        )}
 
         {!hasCoverage && (
-          <p
-            style={{
-              fontSize: '13px',
-              color: 'var(--mu-text-muted)',
-              marginTop: '6px',
-              fontStyle: 'italic',
-            }}
-          >
+          <p style={{ fontSize: '13px', color: 'var(--mu-text-muted)', marginTop: '8px', fontStyle: 'italic' }}>
             Estamos creciendo constantemente — pronto podríamos llegar a tu zona.
           </p>
         )}

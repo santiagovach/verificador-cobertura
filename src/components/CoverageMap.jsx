@@ -12,6 +12,14 @@ const POLYGON_STYLE = {
   strokeOpacity: 0.8,
 }
 
+const FIRMA_STYLE = {
+  fillColor: '#0EA5E9',
+  fillOpacity: 0.5,
+  strokeColor: '#0284C7',
+  strokeWeight: 1.5,
+  strokeOpacity: 0.9,
+}
+
 function MapTooltip({ content, position }) {
   if (!content) return null
   return (
@@ -41,50 +49,52 @@ function MapTooltip({ content, position }) {
 function CoverageLayer({ searchResult }) {
   const map = useMap()
   const dataLayerRef = useRef(null)
+  const firmaLayerRef = useRef(null)
   const [loaded, setLoaded] = useState(false)
   const [tooltip, setTooltip] = useState({ content: null, x: 0, y: 0 })
 
   useEffect(() => {
     if (!map) return
-    // Wait for google.maps to be available on window
     const g = window.google?.maps
     if (!g) return
 
+    // Layer 1: cobertura de protección (purple)
     const layer = new g.Data({ map })
     dataLayerRef.current = layer
-
     layer.loadGeoJson('/coverage-municipalities.geojson', null, features => {
       if (features && features.length > 0) setLoaded(true)
     })
-
     layer.setStyle(POLYGON_STYLE)
 
-    layer.addListener('mouseover', e => {
-      layer.overrideStyle(e.feature, { fillOpacity: 0.65, strokeWeight: 2 })
-      const municipio = e.feature.getProperty('municipio')
-      const estado = e.feature.getProperty('estado')
-      setTooltip({
-        content: `${municipio}, ${estado}`,
-        x: e.domEvent?.offsetX ?? 0,
-        y: e.domEvent?.offsetY ?? 0,
+    const addTooltip = (l, style) => {
+      l.addListener('mouseover', e => {
+        l.overrideStyle(e.feature, { fillOpacity: 0.7, strokeWeight: 2 })
+        const municipio = e.feature.getProperty('municipio')
+        const estado = e.feature.getProperty('estado')
+        const tag = l === firmaLayerRef.current ? ' · Firma física' : ''
+        setTooltip({ content: `${municipio}, ${estado}${tag}`, x: e.domEvent?.offsetX ?? 0, y: e.domEvent?.offsetY ?? 0 })
       })
-    })
+      l.addListener('mousemove', e => {
+        setTooltip(prev => ({ ...prev, x: e.domEvent?.offsetX ?? prev.x, y: e.domEvent?.offsetY ?? prev.y }))
+      })
+      l.addListener('mouseout', e => {
+        l.revertStyle(e.feature)
+        setTooltip({ content: null, x: 0, y: 0 })
+      })
+    }
 
-    layer.addListener('mousemove', e => {
-      setTooltip(prev => ({
-        ...prev,
-        x: e.domEvent?.offsetX ?? prev.x,
-        y: e.domEvent?.offsetY ?? prev.y,
-      }))
-    })
+    addTooltip(layer)
 
-    layer.addListener('mouseout', e => {
-      layer.revertStyle(e.feature)
-      setTooltip({ content: null, x: 0, y: 0 })
-    })
+    // Layer 2: firma física (teal), rendered on top
+    const firmaLayer = new g.Data({ map })
+    firmaLayerRef.current = firmaLayer
+    firmaLayer.loadGeoJson('/firma-fisica-municipalities.geojson')
+    firmaLayer.setStyle(FIRMA_STYLE)
+    addTooltip(firmaLayer)
 
     return () => {
       layer.setMap(null)
+      firmaLayer.setMap(null)
     }
   }, [map])
 

@@ -4,10 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fetchCoverage.js && vite build",
+    "build": "node scripts/fetchCoverage.js && node scripts/fetchFirmaFisica.js && vite build",
     "preview": "vite preview",
     "fetch-coverage": "node --env-file=.env.local scripts/fetchCoverage.js",
-    "filter-municipalities": "node scripts/filterMunicipalities.js"
+    "fetch-firma-fisica": "node --env-file=.env.local scripts/fetchFirmaFisica.js",
+    "filter-municipalities": "node scripts/filterMunicipalities.js",
+    "filter-firma-fisica": "node scripts/filterFirmaFisica.js"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.1",
