@@ -10,6 +10,7 @@ const POLYGON_STYLE = {
   strokeColor: '#4A1654',
   strokeWeight: 1,
   strokeOpacity: 0.8,
+  cursor: 'pointer',
 }
 
 const FIRMA_STYLE = {
@@ -18,6 +19,7 @@ const FIRMA_STYLE = {
   strokeColor: '#0284C7',
   strokeWeight: 1.5,
   strokeOpacity: 0.9,
+  cursor: 'pointer',
 }
 
 function MapTooltip({ content, position }) {
@@ -46,7 +48,7 @@ function MapTooltip({ content, position }) {
   )
 }
 
-function CoverageLayer({ searchResult }) {
+function CoverageLayer({ searchResult, onMunicipalityClick }) {
   const map = useMap()
   const dataLayerRef = useRef(null)
   const firmaLayerRef = useRef(null)
@@ -66,7 +68,7 @@ function CoverageLayer({ searchResult }) {
     })
     layer.setStyle(POLYGON_STYLE)
 
-    const addTooltip = (l, style) => {
+    const addTooltip = (l) => {
       l.addListener('mouseover', e => {
         l.overrideStyle(e.feature, { fillOpacity: 0.7, strokeWeight: 2 })
         const municipio = e.feature.getProperty('municipio')
@@ -80,6 +82,11 @@ function CoverageLayer({ searchResult }) {
       l.addListener('mouseout', e => {
         l.revertStyle(e.feature)
         setTooltip({ content: null, x: 0, y: 0 })
+      })
+      l.addListener('click', e => {
+        const municipio = e.feature.getProperty('municipio')
+        const estado = e.feature.getProperty('estado')
+        if (municipio && estado) onMunicipalityClick?.(municipio, estado)
       })
     }
 
@@ -184,7 +191,7 @@ function CoverageLayer({ searchResult }) {
   )
 }
 
-function MapLoader({ searchResult }) {
+function MapLoader({ searchResult, onMunicipalityClick }) {
   const apiLoaded = useApiIsLoaded()
 
   if (!apiLoaded) {
@@ -227,12 +234,12 @@ function MapLoader({ searchResult }) {
         zoomControl={true}
         style={{ width: '100%', height: '100%' }}
       >
-        <CoverageLayer searchResult={searchResult} />
+        <CoverageLayer searchResult={searchResult} onMunicipalityClick={onMunicipalityClick} />
       </Map>
     </div>
   )
 }
 
-export default function CoverageMap({ searchResult }) {
-  return <MapLoader searchResult={searchResult} />
+export default function CoverageMap({ searchResult, onMunicipalityClick }) {
+  return <MapLoader searchResult={searchResult} onMunicipalityClick={onMunicipalityClick} />
 }

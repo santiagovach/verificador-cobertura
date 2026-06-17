@@ -221,5 +221,19 @@ export function useSearch() {
 
   const clear = useCallback(() => setResult(null), [])
 
-  return { result, isLoading, search, clear }
+  const selectMunicipality = useCallback((municipio, estado) => {
+    const munMatch = findCoveredMunicipality(municipio, estado)
+    if (!munMatch) return
+    setResult({
+      hasCoverage: true,
+      firmaFisicaStatus: checkFirmaFisica(null, munMatch.municipio, munMatch.estado),
+      cp: null,
+      municipio: munMatch.municipio,
+      estado: munMatch.estado,
+      lat: null,
+      lng: null,
+    })
+  }, [])
+
+  return { result, isLoading, search, clear, selectMunicipality }
 }
