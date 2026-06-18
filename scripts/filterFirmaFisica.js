@@ -5,6 +5,12 @@
  * Corre localmente después de fetch-firma-fisica (y fetch-municipios-osm
  * si los polígonos necesitan actualizarse).
  *
+ * Para dividir un municipio (ej. Tlalpan Norte/Sur):
+ *   1. Dibujá el polígono en https://geojson.io
+ *   2. Agregá el feature a data/firma-fisica-overrides.json con
+ *      properties: { "municipio": "Tlalpan", "estado": "Ciudad de México" }
+ *   3. Volvé a correr: npm run filter-firma-fisica
+ *
  * Uso: npm run filter-firma-fisica
  */
 
@@ -50,9 +56,10 @@ const MUNICIPIO_ALIASES = {
 const REVISAR_MUNICIPIOS = new Set(['milpa alta', 'xochimilco', 'tlahuac'])
 
 function main() {
-  const firmaPath  = join(__dirname, '..', 'src', 'data', 'firmaFisica.json')
-  const inegPath   = join(__dirname, '..', 'data', 'municipios-mexico.geojson')
-  const outputPath = join(__dirname, '..', 'public', 'firma-fisica-municipalities.geojson')
+  const firmaPath     = join(__dirname, '..', 'src', 'data', 'firmaFisica.json')
+  const inegPath      = join(__dirname, '..', 'data', 'municipios-mexico.geojson')
+  const overridesPath = join(__dirname, '..', 'data', 'firma-fisica-overrides.json')
+  const outputPath    = join(__dirname, '..', 'public', 'firma-fisica-municipalities.geojson')
 
   if (!existsSync(firmaPath)) {
     console.error('❌ src/data/firmaFisica.json no encontrado. Corre: npm run fetch-firma-fisica')
@@ -65,6 +72,21 @@ function main() {
 
   const firma = JSON.parse(readFileSync(firmaPath, 'utf8'))
   const inegi = JSON.parse(readFileSync(inegPath, 'utf8'))
+
+  // Cargar overrides manuales (municipios con polígono personalizado)
+  const overridesIndex = {}
+  if (existsSync(overridesPath)) {
+    const overrides = JSON.parse(readFileSync(overridesPath, 'utf8'))
+    for (const feature of (overrides.features || [])) {
+      const p = feature.properties || {}
+      if (p.municipio && p.estado) {
+        const key = `${normalize(p.municipio)}|||${normalize(p.estado)}`
+        overridesIndex[key] = feature.geometry
+      }
+    }
+    const count = Object.keys(overridesIndex).length
+    if (count > 0) console.log(`✏️  ${count} override(s) manual(es) cargado(s)`)
+  }
 
   console.log(`📂 ${firma.totalMunicipios} municipios con firma física`)
   console.log(`🗺  ${inegi.features.length} municipios en GeoJSON`)
@@ -105,10 +127,15 @@ function main() {
       normEst === 'mexico' || normEst === 'estado de mexico' ||
       REVISAR_MUNICIPIOS.has(normMunMatch)
 
+    const overrideKey = `${normMunMatch}|||${normEst}`
+    const geometry = overridesIndex[overrideKey] || feature.geometry
+    const isOverride = !!overridesIndex[overrideKey]
+    if (isOverride) console.log(`   ✏️  Usando polígono manual: ${match.municipio}, ${match.estado}`)
+
     matched.push({
       type: 'Feature',
       properties: { municipio: match.municipio, estado: match.estado, firmaFisica: true, requiresReview },
-      geometry: feature.geometry,
+      geometry,
     })
   }
 
