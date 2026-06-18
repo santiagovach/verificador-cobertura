@@ -53,22 +53,15 @@ const MUNICIPIO_ALIASES = {
 
 const REVISAR_MUNICIPIOS = new Set(['milpa alta', 'xochimilco', 'tlahuac'])
 
-// ─── Convex Hull (Graham scan) ─────────────────────────────────────────────────
+// ─── Convex Hull (Andrew's monotone chain) ─────────────────────────────────────
 
 function cross(O, A, B) {
   return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0])
 }
 
 function convexHull(points) {
-  // points: array of [lng, lat] — returns closed ring [[lng,lat],...,[lng,lat]]
-  const n = points.length
-  if (n < 3) return null
-
-  // Deduplicate
   const unique = [...new Map(points.map(p => [`${p[0]},${p[1]}`, p])).values()]
   if (unique.length < 3) return null
-
-  // Sort: by lat asc, then lng asc
   unique.sort((a, b) => a[1] - b[1] || a[0] - b[0])
 
   const lower = []
@@ -77,7 +70,6 @@ function convexHull(points) {
       lower.pop()
     lower.push(p)
   }
-
   const upper = []
   for (let i = unique.length - 1; i >= 0; i--) {
     const p = unique[i]
@@ -85,16 +77,58 @@ function convexHull(points) {
       upper.pop()
     upper.push(p)
   }
-
-  // Remove last point of each half (duplicate of first point of the other)
-  lower.pop()
-  upper.pop()
-
+  lower.pop(); upper.pop()
   const hull = [...lower, ...upper]
   if (hull.length < 3) return null
-
-  hull.push(hull[0]) // close ring
+  hull.push(hull[0])
   return hull
+}
+
+// ─── Bounding box helpers ───────────────────────────────────────────────────────
+
+function getBbox(ring) {
+  const lats = ring.map(c => c[1]), lngs = ring.map(c => c[0])
+  return { minLat: Math.min(...lats), maxLat: Math.max(...lats),
+           minLng: Math.min(...lngs), maxLng: Math.max(...lngs) }
+}
+
+function bboxArea(bb) {
+  return (bb.maxLat - bb.minLat) * (bb.maxLng - bb.minLng)
+}
+
+function filterToBbox(points, bb, margin = 0.05) {
+  const latM = (bb.maxLat - bb.minLat) * margin
+  const lngM = (bb.maxLng - bb.minLng) * margin
+  return points.filter(([lng, lat]) =>
+    lat >= bb.minLat - latM && lat <= bb.maxLat + latM &&
+    lng >= bb.minLng - lngM && lng <= bb.maxLng + lngM
+  )
+}
+
+/**
+ * Returns convex hull geometry if the hull is a meaningful sub-zone
+ * (20–92% of the municipality bbox area, after filtering coords to the bbox).
+ * Returns null to signal "use OSM polygon instead".
+ */
+function buildHull(cpPoints, osmRing) {
+  const osmBbox = getBbox(osmRing)
+  const osmArea = bboxArea(osmBbox)
+
+  const inBounds = filterToBbox(cpPoints, osmBbox)
+  if (inBounds.length < 3) return null
+
+  const hull = convexHull(inBounds)
+  if (!hull) return null
+
+  const hullBbox = getBbox(hull)
+  const hullArea = bboxArea(hullBbox)
+  const ratio = osmArea > 0 ? hullArea / osmArea : 1
+
+  // Hull is unreliable if it covers almost everything (>92%) — use OSM instead
+  // Hull is unreliable if it's tiny (<20%) — too sparse, OSM is more honest
+  if (ratio > 0.92 || ratio < 0.20) return null
+
+  return { type: 'Polygon', coordinates: [hull] }
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
@@ -170,16 +204,12 @@ function main() {
     const normMunMatch = normalize(match.municipio)
     const requiresReview = normEst === 'mexico' || normEst === 'estado de mexico' || REVISAR_MUNICIPIOS.has(normMunMatch)
 
-    // Try convex hull from CP coordinates
-    const coords = munCoords[key]
-    const hull = coords?.length >= 3 ? convexHull(coords) : null
-
-    let geometry
-    if (hull) {
-      geometry = { type: 'Polygon', coordinates: [hull] }
-    } else {
-      geometry = feature.geometry
-    }
+    // Try convex hull from CP coordinates, validated against the OSM polygon bounds
+    const cpPoints = munCoords[key] || []
+    const osmRing = feature.geometry.type === 'Polygon'
+      ? feature.geometry.coordinates[0]
+      : feature.geometry.coordinates[0][0]
+    const hullGeom = cpPoints.length >= 3 ? buildHull(cpPoints, osmRing) : null
 
     matched.push({
       type: 'Feature',
@@ -188,9 +218,9 @@ function main() {
         estado: match.estado,
         firmaFisica: true,
         requiresReview,
-        hullBased: hull !== null,
+        hullBased: hullGeom !== null,
       },
-      geometry,
+      geometry: hullGeom ?? feature.geometry,
     })
   }
 
