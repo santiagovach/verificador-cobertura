@@ -1,11 +1,14 @@
 /**
- * Lee el Planificador M1 del equipo de firmas y genera src/data/firmaFisica.json.
- * Solo procesa filas con Tipo de firma = "Presencial".
+ * Lee la tab "Firma física" del Sheet y genera src/data/firmaFisica.json.
+ *
+ * La tab tiene 4 columnas: CP | Municipio | Estado | Plaza
+ * Para actualizar: pega una nueva lista en el Sheet y presiona "Actualizar".
+ *
  * Corre automáticamente durante el build en Vercel.
  */
 
 import { google } from 'googleapis'
-import { readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { writeFileSync, mkdirSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
@@ -40,57 +43,44 @@ async function main() {
     return
   }
 
-  console.log('📋 Leyendo Planificador de firmas...')
+  console.log('📋 Leyendo tab "Firma física"...')
   const auth = getAuth()
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() })
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: 'Planificador M1!A:U',
+    range: 'Firma física!A:D',
   })
 
   const rows = res.data.values || []
-  if (rows.length < 2) throw new Error('Sheet vacío o sin datos.')
+  if (rows.length < 2) throw new Error('Tab "Firma física" vacía o sin datos.')
 
-  const header = rows[0]
-  const idx = (name) => header.indexOf(name)
-  const dirIdx = idx('Dirección')
-  const tipoIdx = idx('Tipo de firma')
+  // Esperar header: CP | Municipio | Estado | Plaza
+  const header = rows[0].map(h => h.trim().toLowerCase())
+  const cpIdx       = header.findIndex(h => h.includes('cp'))
+  const munIdx      = header.findIndex(h => h.includes('municipio'))
+  const estadoIdx   = header.findIndex(h => h.includes('estado'))
+  const plazaIdx    = header.findIndex(h => h.includes('plaza'))
 
-  // Load coverage.json to resolve CP → municipio/estado
-  const coveragePath = join(__dirname, '..', 'src', 'data', 'coverage.json')
-  const coverage = JSON.parse(readFileSync(coveragePath, 'utf8'))
-
-  // Excluir solo Monterrey (Nuevo León) y Tijuana (Baja California)
-  function isAllowedEstado(estado) {
-    const n = (estado || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
-    return !n.includes('nuevo leon') && !n.includes('baja california')
+  if (cpIdx === -1 || munIdx === -1 || estadoIdx === -1) {
+    throw new Error('Columnas esperadas no encontradas. La tab debe tener: CP, Municipio, Estado, Plaza')
   }
 
   const byCp = {}
   const munSet = {}
-
-  let total = 0, conCP = 0, sinMatch = 0, fueraDeZona = 0
+  let skipped = 0
 
   for (const r of rows.slice(1)) {
-    const tipo = (r[tipoIdx] || '').toLowerCase().trim()
-    if (tipo !== 'presencial') continue
-    total++
+    const cp       = (r[cpIdx] || '').trim()
+    const municipio = (r[munIdx] || '').trim()
+    const estado   = (r[estadoIdx] || '').trim()
+    const plaza    = plazaIdx >= 0 ? (r[plazaIdx] || '').trim() : ''
 
-    const dir = r[dirIdx] || ''
-    const cpMatch = dir.match(/\b(\d{5})\b/)
-    if (!cpMatch) continue
+    if (!cp || !municipio || !estado) { skipped++; continue }
 
-    const cp = cpMatch[1]
-    const entry = coverage.byCp[cp]
-    if (!entry) { sinMatch++; continue }
-
-    if (!isAllowedEstado(entry.estado)) { fueraDeZona++; continue }
-
-    conCP++
     if (!byCp[cp]) {
-      byCp[cp] = { municipio: entry.municipio, estado: entry.estado }
-      const munKey = `${entry.municipio}|||${entry.estado}`
-      if (!munSet[munKey]) munSet[munKey] = { municipio: entry.municipio, estado: entry.estado }
+      byCp[cp] = { municipio, estado }
+      const munKey = `${municipio}|||${estado}`
+      if (!munSet[munKey]) munSet[munKey] = { municipio, estado, ...(plaza ? { plaza } : {}) }
     }
   }
 
@@ -108,7 +98,7 @@ async function main() {
   writeFileSync(outPath, JSON.stringify(result))
 
   console.log(`✅ firmaFisica.json generado: ${result.totalCPs} CPs, ${result.totalMunicipios} municipios`)
-  console.log(`   (${total} presenciales procesadas, ${conCP} con CP en cobertura, ${sinMatch} sin match, ${fueraDeZona} fuera de zona)`)
+  if (skipped > 0) console.log(`   (${skipped} filas omitidas por datos incompletos)`)
 }
 
 main().catch(e => {
