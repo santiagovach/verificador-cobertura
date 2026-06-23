@@ -8,7 +8,7 @@
  */
 
 import { google } from 'googleapis'
-import { writeFileSync, mkdirSync } from 'fs'
+import { writeFileSync, mkdirSync, existsSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
@@ -111,5 +111,14 @@ async function main() {
 
 main().catch(e => {
   console.error('❌ Error al generar firmaFisica.json:', e.message)
-  process.exit(1)
+  console.warn('⚠️  El build continuará sin datos de firma física actualizados.')
+  // Ensure the file exists so Vite can still import it
+  const outPath = join(__dirname, '..', 'src', 'data', 'firmaFisica.json')
+  try {
+    mkdirSync(dirname(outPath), { recursive: true })
+    if (!existsSync(outPath)) {
+      const empty = { lastUpdated: new Date().toISOString(), totalCPs: 0, totalMunicipios: 0, municipalities: [], byCp: {} }
+      writeFileSync(outPath, JSON.stringify(empty))
+    }
+  } catch {}
 })
