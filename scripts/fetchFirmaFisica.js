@@ -48,7 +48,7 @@ async function main() {
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() })
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: 'Firma física!A:D',
+    range: "'Firma física'!A:D",
   })
 
   const rows = res.data.values || []

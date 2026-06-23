@@ -42,8 +42,10 @@ function findCoveredMunicipality(googleMunicipio, googleEstado) {
   const direct = coveredMunicipalityMap[`${normMun}|||${normEst}`]
   if (direct) return direct
 
-  // CDMX: Google returns "Ciudad de México" as both locality and state
-  if (normMun === normEst && coveredEstadoSet.has(normEst)) {
+  // CDMX: entire city has coverage. For CP searches Google returns "Ciudad de México" as
+  // locality; for specific-address searches it may return the colonia name instead, so we
+  // cannot rely on normMun === normEst — just checking the state is enough.
+  if (normalizeState(googleEstado) === 'ciudad de mexico') {
     return { municipio: googleMunicipio, estado: googleEstado }
   }
 
@@ -82,6 +84,20 @@ function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
     const normEst = normalizeState(geocodedEstado)
     const entry = firmaFisicaMunicipalityMap[`${normMun}|||${normEst}`]
     if (entry) return firmaFisicaStatus(entry.municipio, entry.estado)
+  }
+
+  // 3. CP prefix fallback — for CPs absent from the dataset but in the same alcaldía range.
+  //    CDMX geocoding returns "Ciudad de México" as locality (not the specific alcaldía), so
+  //    steps 1–2 both fail; matching a nearby CP by prefix reliably identifies the alcaldía.
+  if (cp) {
+    for (let len = cp.length - 1; len >= 3; len--) {
+      const prefix = cp.slice(0, len)
+      const match = Object.keys(firmaFisicaData.byCp).find(k => k.startsWith(prefix))
+      if (match) {
+        const { municipio, estado } = firmaFisicaData.byCp[match]
+        return firmaFisicaStatus(municipio, estado)
+      }
+    }
   }
 
   return null
@@ -206,7 +222,34 @@ export function useSearch() {
         }
       }
 
-      // 3. No coverage
+      // 3. CP prefix fallback — Google often returns a colonia name (sublocality_level_1) as
+      //    the municipality for CDMX address searches instead of the alcaldía, so steps 1–2
+      //    both fail even when the CP range is fully covered.
+      if (cp) {
+        for (let len = cp.length - 1; len >= 3; len--) {
+          const prefix = cp.slice(0, len)
+          const matchKey = Object.keys(coverageData.byCp).find(k => k.startsWith(prefix))
+          if (matchKey) {
+            const prefixEntry = coverageData.byCp[matchKey]
+            if (!lat && !lng) {
+              const fallback = await geocode(`${prefixEntry.municipio}, ${prefixEntry.estado}, México`)
+              if (fallback) { lat = fallback.lat; lng = fallback.lng }
+            }
+            setResult({
+              hasCoverage: true,
+              firmaFisicaStatus: checkFirmaFisica(cp, prefixEntry.municipio, prefixEntry.estado),
+              cp,
+              municipio: prefixEntry.municipio,
+              estado: prefixEntry.estado,
+              lat,
+              lng,
+            })
+            return
+          }
+        }
+      }
+
+      // 4. No coverage
       setResult({
         hasCoverage: false,
         firmaFisicaStatus: null,
