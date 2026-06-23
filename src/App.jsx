@@ -112,7 +112,7 @@ function LoginPrompt({ onSignIn }) {
 
 export default function App() {
   const { user, isAdmin, signIn, signOut } = useAuth()
-  const { result, isLoading, search, selectMunicipality } = useSearch()
+  const { result, isLoading, search, clear, selectMunicipality } = useSearch()
   const [showAdmin, setShowAdmin] = useState(false)
 
   return (
@@ -136,7 +136,7 @@ export default function App() {
               gap: '20px',
             }}
           >
-            <SearchBar onSearch={search} isLoading={isLoading} />
+            <SearchBar onSearch={search} onClear={clear} isLoading={isLoading} />
             {result && <ResultBanner result={result} />}
             <MapErrorBoundary>
               <CoverageMap searchResult={result?.error ? null : result} onMunicipalityClick={selectMunicipality} />

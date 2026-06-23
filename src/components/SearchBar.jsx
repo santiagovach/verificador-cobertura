@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
 
-export default function SearchBar({ onSearch, isLoading }) {
+export default function SearchBar({ onSearch, onClear, isLoading }) {
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
   const inputRef = useRef(null)
@@ -70,29 +70,60 @@ export default function SearchBar({ onSearch, isLoading }) {
           margin: '0 auto',
         }}
       >
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Ej: 06600  o  Av. Reforma 222, CDMX"
-          maxLength={200}
-          autoComplete="off"
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={{
-            flex: 1,
-            padding: '14px 18px',
-            borderRadius: 'var(--mu-radius)',
-            border: `2px solid ${focused ? 'var(--mu-purple-primary)' : 'var(--mu-border)'}`,
-            fontSize: '15px',
-            fontFamily: 'var(--mu-font-ui)',
-            outline: 'none',
-            transition: 'border-color 0.2s, box-shadow 0.2s',
-            boxShadow: focused ? '0 0 0 3px rgba(103, 30, 117, 0.1)' : 'none',
-            color: 'var(--mu-text)',
-          }}
-        />
+        <div style={{ flex: 1, position: 'relative' }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Ej: 06600  o  Av. Reforma 222, CDMX"
+            maxLength={200}
+            autoComplete="off"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={{
+              width: '100%',
+              padding: query ? '14px 40px 14px 18px' : '14px 18px',
+              borderRadius: 'var(--mu-radius)',
+              border: `2px solid ${focused ? 'var(--mu-purple-primary)' : 'var(--mu-border)'}`,
+              fontSize: '15px',
+              fontFamily: 'var(--mu-font-ui)',
+              outline: 'none',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+              boxShadow: focused ? '0 0 0 3px rgba(103, 30, 117, 0.1)' : 'none',
+              color: 'var(--mu-text)',
+              boxSizing: 'border-box',
+            }}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => { setQuery(''); onClear?.(); inputRef.current?.focus() }}
+              aria-label="Limpiar búsqueda"
+              style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                background: 'var(--mu-neutral-200)',
+                color: 'var(--mu-text-muted)',
+                fontSize: '13px',
+                lineHeight: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--mu-border)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'var(--mu-neutral-200)')}
+            >
+              ×
+            </button>
+          )}
+        </div>
         <button
           type="submit"
           disabled={isLoading || !query.trim()}
