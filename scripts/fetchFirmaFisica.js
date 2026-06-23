@@ -47,12 +47,16 @@ async function main() {
   const auth = getAuth()
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() })
 
-  // Discover the actual tab name (encoding/casing may differ between environments)
-  const meta = await sheets.spreadsheets.get({ spreadsheetId: sheetId, fields: 'sheets.properties.title' })
-  const tabs = meta.data.sheets.map(s => s.properties.title)
-  const tabName = tabs.find(t => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes('firma'))
-  if (!tabName) throw new Error(`No se encontró tab de firma física. Tabs disponibles: ${tabs.join(', ')}`)
-  console.log(`  Tab encontrado: "${tabName}"`)
+  // Find the tab by gid (sheetId) — more reliable than matching by name
+  const FIRMA_FISICA_GID = parseInt(process.env.FIRMA_FISICA_SHEET_GID || '974672057', 10)
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: sheetId, fields: 'sheets.properties' })
+  const sheet = meta.data.sheets.find(s => s.properties.sheetId === FIRMA_FISICA_GID)
+  if (!sheet) {
+    const available = meta.data.sheets.map(s => `"${s.properties.title}" (gid=${s.properties.sheetId})`).join(', ')
+    throw new Error(`No se encontró tab con gid=${FIRMA_FISICA_GID}. Tabs: ${available}`)
+  }
+  const tabName = sheet.properties.title
+  console.log(`  Tab encontrado: "${tabName}" (gid=${FIRMA_FISICA_GID})`)
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
