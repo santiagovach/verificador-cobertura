@@ -46,9 +46,17 @@ async function main() {
   console.log('📋 Leyendo tab "Firma física"...')
   const auth = getAuth()
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() })
+
+  // Discover the actual tab name (encoding/casing may differ between environments)
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: sheetId, fields: 'sheets.properties.title' })
+  const tabs = meta.data.sheets.map(s => s.properties.title)
+  const tabName = tabs.find(t => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes('firma'))
+  if (!tabName) throw new Error(`No se encontró tab de firma física. Tabs disponibles: ${tabs.join(', ')}`)
+  console.log(`  Tab encontrado: "${tabName}"`)
+
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: "'Firma física'!A:D",
+    range: `'${tabName}'!A:D`,
   })
 
   const rows = res.data.values || []
