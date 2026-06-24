@@ -206,10 +206,14 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
 function MapLoader({ searchResult, onMunicipalityClick }) {
   const apiLoaded = useApiIsLoaded()
 
+  const mapHeight = 'calc(100vh - 300px)'
+  const mapMinHeight = '420px'
+
   if (!apiLoaded) {
     return (
       <div style={{
-        height: '460px',
+        height: mapHeight,
+        minHeight: mapMinHeight,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -231,7 +235,8 @@ function MapLoader({ searchResult, onMunicipalityClick }) {
         borderRadius: 'var(--mu-radius)',
         overflow: 'hidden',
         boxShadow: 'var(--mu-shadow)',
-        height: '460px',
+        height: mapHeight,
+        minHeight: mapMinHeight,
         position: 'relative',
         background: 'var(--mu-neutral-100)',
       }}
