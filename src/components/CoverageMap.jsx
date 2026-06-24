@@ -206,8 +206,8 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
 function MapLoader({ searchResult, onMunicipalityClick }) {
   const apiLoaded = useApiIsLoaded()
 
-  const mapHeight = 'calc(100vh - 300px)'
-  const mapMinHeight = '420px'
+  const mapHeight = 'calc(100vh - 220px)'
+  const mapMinHeight = '500px'
 
   if (!apiLoaded) {
     return (
