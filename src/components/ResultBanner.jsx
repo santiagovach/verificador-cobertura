@@ -64,17 +64,18 @@ export default function ResultBanner({ result }) {
         {/* Bullet 2: Firma física (solo si hay cobertura general) */}
         {hasCoverage && (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <span style={{ fontSize: '15px', color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' ? '#D97706' : 'var(--mu-text-muted)' }}>●</span>
+            <span style={{ fontSize: '15px', color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' || firmaFisicaStatus === 'depende_cp' ? '#D97706' : 'var(--mu-text-muted)' }}>●</span>
             <p style={{
               fontSize: '15px',
               fontWeight: '600',
-              color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' ? '#D97706' : 'var(--mu-text-muted)',
+              color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' || firmaFisicaStatus === 'depende_cp' ? '#D97706' : 'var(--mu-text-muted)',
               fontFamily: 'var(--mu-font-ui)',
             }}>
               Firma presencial:{' '}
               <span style={{ fontWeight: firmaFisicaStatus ? '700' : '400' }}>
                 {firmaFisicaStatus === 'disponible' ? 'Disponible'
                   : firmaFisicaStatus === 'revisar' ? 'Revisar disponibilidad por revenue'
+                  : firmaFisicaStatus === 'depende_cp' ? 'Varía por CP — busca tu código postal exacto'
                   : 'No disponible'}
               </span>
             </p>

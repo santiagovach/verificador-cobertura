@@ -69,6 +69,17 @@ const firmaFisicaPrefixKeys = Object.keys(firmaFisicaData.byCp).filter(
   cp => !EXACT_ONLY_ESTADOS.has(firmaFisicaData.byCp[cp].estado)
 )
 
+// Municipios que sí aparecen en el dataset exacto por CP (tienen al menos un CP
+// "Sí") — usado para el click en el mapa (sin CP puntual): ahí no podemos decir
+// disponible/no disponible para todo el municipio, solo que depende del CP.
+const exactOnlyMunicipioSet = new Set()
+for (const cp in firmaFisicaData.byCp) {
+  const { municipio, estado } = firmaFisicaData.byCp[cp]
+  if (EXACT_ONLY_ESTADOS.has(estado)) {
+    exactOnlyMunicipioSet.add(`${normalize(municipio)}|||${normalize(estado)}`)
+  }
+}
+
 const REVISAR_MUNICIPIOS = new Set(['milpa alta', 'xochimilco', 'tlahuac'])
 
 function firmaFisicaStatus(municipio, estado) {
@@ -86,7 +97,15 @@ function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
     return firmaFisicaStatus(municipio, estado)
   }
 
-  // 2. Municipality fallback
+  // 2. No specific CP (e.g. clicking a municipio on the map) in a plaza with
+  //    exact-per-CP data — can't say disponible/no disponible for the whole
+  //    municipio, only that it depends on the CP.
+  if (!cp && geocodedMunicipio && geocodedEstado) {
+    const key = `${normalize(geocodedMunicipio)}|||${normalize(geocodedEstado)}`
+    if (exactOnlyMunicipioSet.has(key)) return 'depende_cp'
+  }
+
+  // 3. Municipality fallback
   if (geocodedMunicipio && geocodedEstado) {
     const normMun = normalize(geocodedMunicipio)
     const normEst = normalizeState(geocodedEstado)
@@ -94,7 +113,7 @@ function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
     if (entry) return firmaFisicaStatus(entry.municipio, entry.estado)
   }
 
-  // 3. CP prefix fallback — for CPs absent from the dataset but in the same alcaldía range.
+  // 4. CP prefix fallback — for CPs absent from the dataset but in the same alcaldía range.
   //    CDMX geocoding returns "Ciudad de México" as locality (not the specific alcaldía), so
   //    steps 1–2 both fail; matching a nearby CP by prefix reliably identifies the alcaldía.
   if (cp) {
