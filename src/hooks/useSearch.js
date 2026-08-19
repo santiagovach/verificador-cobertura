@@ -61,6 +61,14 @@ for (const { municipio, estado } of firmaFisicaData.municipalities) {
   firmaFisicaMunicipalityMap[key] = { municipio, estado }
 }
 
+// Querétaro y Guadalajara/Jalisco tienen cobertura exacta por CP (parcial dentro
+// del municipio), no municipio-completo — para esos estados el prefix fallback no
+// es válido: un CP cercano "Si" no dice nada sobre un CP "No" o sin revisar.
+const EXACT_ONLY_ESTADOS = new Set(firmaFisicaData.exactOnlyEstados || [])
+const firmaFisicaPrefixKeys = Object.keys(firmaFisicaData.byCp).filter(
+  cp => !EXACT_ONLY_ESTADOS.has(firmaFisicaData.byCp[cp].estado)
+)
+
 const REVISAR_MUNICIPIOS = new Set(['milpa alta', 'xochimilco', 'tlahuac'])
 
 function firmaFisicaStatus(municipio, estado) {
@@ -92,7 +100,7 @@ function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
   if (cp) {
     for (let len = cp.length - 1; len >= 3; len--) {
       const prefix = cp.slice(0, len)
-      const match = Object.keys(firmaFisicaData.byCp).find(k => k.startsWith(prefix))
+      const match = firmaFisicaPrefixKeys.find(k => k.startsWith(prefix))
       if (match) {
         const { municipio, estado } = firmaFisicaData.byCp[match]
         return firmaFisicaStatus(municipio, estado)
