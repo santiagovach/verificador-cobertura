@@ -232,51 +232,10 @@ export function useSearch() {
         return
       }
 
-      // 2. Municipality fallback for coverage
-      if (geocodedMunicipio && geocodedEstado) {
-        const munMatch = findCoveredMunicipality(geocodedMunicipio, geocodedEstado)
-        if (munMatch) {
-          setResult({
-            hasCoverage: true,
-            firmaFisicaStatus: checkFirmaFisica(cp, munMatch.municipio, munMatch.estado),
-            cp,
-            municipio: munMatch.municipio,
-            estado: munMatch.estado,
-            lat,
-            lng,
-          })
-          return
-        }
-      }
-
-      // 3. CP prefix fallback — Google often returns a colonia name (sublocality_level_1) as
-      //    the municipality for CDMX address searches instead of the alcaldía, so steps 1–2
-      //    both fail even when the CP range is fully covered.
-      if (cp) {
-        for (let len = cp.length - 1; len >= 3; len--) {
-          const prefix = cp.slice(0, len)
-          const matchKey = Object.keys(coverageData.byCp).find(k => k.startsWith(prefix))
-          if (matchKey) {
-            const prefixEntry = coverageData.byCp[matchKey]
-            if (!lat && !lng) {
-              const fallback = await geocode(`${prefixEntry.municipio}, ${prefixEntry.estado}, México`)
-              if (fallback) { lat = fallback.lat; lng = fallback.lng }
-            }
-            setResult({
-              hasCoverage: true,
-              firmaFisicaStatus: checkFirmaFisica(cp, prefixEntry.municipio, prefixEntry.estado),
-              cp,
-              municipio: prefixEntry.municipio,
-              estado: prefixEntry.estado,
-              lat,
-              lng,
-            })
-            return
-          }
-        }
-      }
-
-      // 4. No coverage
+      // 2. No coverage — "Con Cobertura" is CP-exact for every plaza now, so an
+      //    absent CP means no coverage, full stop. No municipio or CP-prefix
+      //    fallback: a covered neighbor CP must never resurrect coverage for a
+      //    CP that was explicitly removed from the sheet.
       setResult({
         hasCoverage: false,
         firmaFisicaStatus: null,
