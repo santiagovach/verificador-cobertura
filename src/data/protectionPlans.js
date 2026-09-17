@@ -1,27 +1,22 @@
-// Catálogo de tipos de protección (sub_product en Metabase), con un
-// multiplicador de "renta efectiva" para el radar de firma física.
+// Catálogo de tipos de protección — SOLO los 4 productos vigentes que
+// vendemos (Protección MLegal, M3, M6, M12). IDs son los reales de la tabla
+// `sub_product` en Metabase (verificado 2026-09-17: DESCRIBE + SELECT sobre
+// sub_product), no inventados.
 //
-// El multiplicador viene de dividir el cost_percent PROMEDIO real de cada
-// plan (calculado sobre deals reales, filtrando outliers de captura) entre
-// el de M3 (el plan más común, ~35% — usado como línea base). Un plan más
-// rentable para MoradaUno "cuenta" como si la renta fuera más grande para
-// efectos de qué tan lejos vale la pena mandar a firmar; uno menos rentable
-// cuenta como más chica. Redondeado a un decimal para que sea fácil de leer
-// y ajustar — no es una tarifa oficial de producto.
+// El costo (% de un mes de renta + IVA) es la tarifa OFICIAL publicada
+// (tarjetas de producto), no un promedio calculado sobre deals — a
+// diferencia del cost_percent real en `agreement`, que varía deal a deal
+// por promociones/excepciones. M6 tiene una promo de lanzamiento (40%)
+// vigente sobre su tarifa regular (45%); se usa la tarifa regular como
+// referencia estable ya que la promo es temporal.
 //
-// Verificado 2026-09-17 contra Metabase (avg cost_percent, cost_percent
-// entre 0 y 2 para excluir errores de captura):
+// El multiplicador de "renta efectiva" para el radar sale de dividir el
+// costo de cada plan entre el de M3 (30%, línea base histórica).
 export const PROTECTION_PLANS = [
-  { id: 4, label: 'M12', avgCostPercent: 0.58, multiplier: 1.7 },
-  { id: 2, label: 'M3', avgCostPercent: 0.35, multiplier: 1.0 },
-  { id: 3, label: 'M3 Light', avgCostPercent: 0.23, multiplier: 0.7 },
-  { id: 17, label: 'M Legal', avgCostPercent: 0.31, multiplier: 0.9 },
-  { id: 1, label: 'Seguro de daños', avgCostPercent: 0.35, multiplier: 1.0 },
-  { id: 10, label: 'Investigación + Contratos', avgCostPercent: 0.15, multiplier: 0.4 },
-  { id: 11, label: 'Investigación + RPP + Contratos', avgCostPercent: 0.09, multiplier: 0.25 },
-  { id: 6, label: 'Investigación + RPP', avgCostPercent: 0.08, multiplier: 0.25 },
-  { id: 5, label: 'Investigación', avgCostPercent: 0.08, multiplier: 0.2 },
-  { id: 18, label: 'Contratos', avgCostPercent: 0.06, multiplier: 0.2 },
+  { id: 17, label: 'M Legal', costPercent: 0.25, multiplier: 0.8 },
+  { id: 2, label: 'M3', costPercent: 0.30, multiplier: 1.0 },
+  { id: 34, label: 'M6', costPercent: 0.45, multiplier: 1.5 },
+  { id: 4, label: 'M12', costPercent: 0.60, multiplier: 2.0 },
 ]
 
 export function planMultiplier(planId) {
