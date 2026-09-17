@@ -198,11 +198,10 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ flex: '0 0 140px', minWidth: '140px' }}>
             <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              value={rentAmount}
-              onChange={e => setRentAmount(e.target.value)}
+              type="text"
+              inputMode="numeric"
+              value={rentAmount ? `$${Number(rentAmount).toLocaleString('es-MX')}` : ''}
+              onChange={e => setRentAmount(e.target.value.replace(/\D/g, ''))}
               placeholder="Monto de renta"
               style={{
                 width: '100%',

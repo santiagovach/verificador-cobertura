@@ -74,18 +74,19 @@ function resolveMinPayment(plan, plaza, propertyType) {
 }
 
 /**
- * Convierte renta + plan + plaza + tipo de inmueble en una "renta efectiva"
- * para el radar, ya con el piso (pago mínimo) y el techo (renta máxima
- * protegida) reales de cada combinación.
+ * Cobro mensual real (revenue) que le deja a MoradaUno esa renta bajo ese
+ * plan — ya con el piso (pago mínimo) y el techo (renta máxima protegida)
+ * reales de la plaza + tipo de inmueble. Este es el número en pesos, no
+ * normalizado — para eso ver `effectiveRentForPlan`.
  *
  * @param {number} rentAmount
  * @param {number} planId
  * @param {{plaza?: string, propertyType?: 'Residencial'|'Comercial'|'Industrial'}} ctx
  */
-export function effectiveRentForPlan(rentAmount, planId, { plaza, propertyType } = {}) {
+export function actualFeeForPlan(rentAmount, planId, { plaza, propertyType } = {}) {
   if (!rentAmount) return 0
   const plan = PROTECTION_PLANS.find(p => p.id === planId)
-  if (!plan) return rentAmount // sin plan seleccionado: sin ajuste
+  if (!plan) return null // sin plan seleccionado: no hay cobro que calcular
 
   const type = propertyType || DEFAULT_PROPERTY_TYPE
   const rentPercent = plan.ratesByType[type] ?? plan.ratesByType[DEFAULT_PROPERTY_TYPE]
@@ -93,6 +94,17 @@ export function effectiveRentForPlan(rentAmount, planId, { plaza, propertyType }
     ? Math.min(rentAmount, plan.maxProtectedRent)
     : rentAmount
   const minPayment = resolveMinPayment(plan, plaza || DEFAULT_PLAZA, type)
-  const actualFee = Math.max(protectedRent * rentPercent, minPayment)
-  return actualFee / BASELINE_COST_PERCENT
+  return Math.max(protectedRent * rentPercent, minPayment)
+}
+
+/**
+ * Convierte renta + plan + plaza + tipo de inmueble en una "renta efectiva"
+ * para el radar — el cobro real (`actualFeeForPlan`) reexpresado sobre la
+ * tarifa de M3 (30%) para seguir siendo comparable contra las mismas capas.
+ * Sin plan seleccionado, regresa la renta tal cual (sin ajuste).
+ */
+export function effectiveRentForPlan(rentAmount, planId, ctx = {}) {
+  if (!rentAmount) return 0
+  const fee = actualFeeForPlan(rentAmount, planId, ctx)
+  return fee == null ? rentAmount : fee / BASELINE_COST_PERCENT
 }

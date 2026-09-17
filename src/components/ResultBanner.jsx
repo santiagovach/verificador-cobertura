@@ -113,6 +113,9 @@ export default function ResultBanner({ result }) {
         {firmaFisicaRadar?.rentAmountRaw != null && planLabel && (
           <p style={{ fontSize: '12px', color: 'var(--mu-text-muted)', marginTop: '2px', marginLeft: '23px' }}>
             Renta ${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')} · plan {planLabel} → renta efectiva ${Math.round(firmaFisicaRadar.effectiveRent).toLocaleString('es-MX')} para el radar
+            {firmaFisicaRadar.revenue != null && (
+              <> · revenue estimado ${Math.round(firmaFisicaRadar.revenue).toLocaleString('es-MX')}/mes</>
+            )}
           </p>
         )}
 

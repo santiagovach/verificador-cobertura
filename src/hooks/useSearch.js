@@ -3,7 +3,7 @@ import coverageData from '../data/coverage.json'
 import firmaFisicaData from '../data/firmaFisica.json'
 import { checkSignatureRadar } from '../lib/coverageRadius.js'
 import { checkPIC } from '../utils/api.js'
-import { effectiveRentForPlan } from '../data/protectionPlans.js'
+import { effectiveRentForPlan, actualFeeForPlan } from '../data/protectionPlans.js'
 
 const CP_REGEX = /^\d{5}$/
 
@@ -247,12 +247,13 @@ export function useSearch() {
         // cada plan (no solo renta x %). Ver src/data/protectionPlans.js.
         // Sin plan seleccionado, no hay ajuste.
         const effectiveRent = hasRentAmount ? effectiveRentForPlan(rentAmount, planId, { plaza, propertyType }) : undefined
+        const revenue = hasRentAmount ? actualFeeForPlan(rentAmount, planId, { plaza, propertyType }) : null
 
         const radar = checkSignatureRadar(
           { lat: searchLat, lng: searchLng },
           { rentAmount: effectiveRent, isPIC }
         )
-        return radar && { ...radar, rentAmountRaw: hasRentAmount ? rentAmount : null, planId: planId || null }
+        return radar && { ...radar, rentAmountRaw: hasRentAmount ? rentAmount : null, planId: planId || null, revenue }
       }
 
       // 1. Exact CP match
