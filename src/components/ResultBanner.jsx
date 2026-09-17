@@ -3,7 +3,7 @@ import { PROTECTION_PLANS } from '../data/protectionPlans.js'
 export default function ResultBanner({ result }) {
   if (!result) return null
 
-  const { hasCoverage, firmaFisicaStatus, firmaFisicaRadar, cp, municipio, estado, error } = result
+  const { hasCoverage, firmaFisicaRadar, cp, municipio, estado, error } = result
 
   const TIER_LABELS = { 0: 'Garantizada (≤6 km)', 1: 'Estándar (6-15 km)', 2: 'Excepcional (15-25 km)' }
   const planLabel = firmaFisicaRadar?.planId
@@ -68,28 +68,7 @@ export default function ResultBanner({ result }) {
           </p>
         </div>
 
-        {/* Bullet 2: Firma física (solo si hay cobertura general) */}
-        {hasCoverage && (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <span style={{ fontSize: '15px', color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' || firmaFisicaStatus === 'depende_cp' ? '#D97706' : 'var(--mu-text-muted)' }}>●</span>
-            <p style={{
-              fontSize: '15px',
-              fontWeight: '600',
-              color: firmaFisicaStatus === 'disponible' ? '#0284C7' : firmaFisicaStatus === 'revisar' || firmaFisicaStatus === 'depende_cp' ? '#D97706' : 'var(--mu-text-muted)',
-              fontFamily: 'var(--mu-font-ui)',
-            }}>
-              Firma presencial:{' '}
-              <span style={{ fontWeight: firmaFisicaStatus ? '700' : '400' }}>
-                {firmaFisicaStatus === 'disponible' ? 'Disponible'
-                  : firmaFisicaStatus === 'revisar' ? 'Revisar disponibilidad por revenue'
-                  : firmaFisicaStatus === 'depende_cp' ? 'Varía por CP — busca tu código postal exacto'
-                  : 'No disponible'}
-              </span>
-            </p>
-          </div>
-        )}
-
-        {/* Bullet 3: Radar de firma física por punto (solo si se llenó renta/asesor/inmobiliaria) */}
+        {/* Radar de firma física por punto (solo si se llenó renta/asesor/inmobiliaria) */}
         {firmaFisicaRadar?.error && (
           <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
             ⚠️ No se pudo calcular el radar: {firmaFisicaRadar.error}
@@ -110,9 +89,11 @@ export default function ResultBanner({ result }) {
             </p>
           </div>
         )}
-        {firmaFisicaRadar?.rentAmountRaw != null && planLabel && (
+        {firmaFisicaRadar?.rentAmountRaw != null && (
           <p style={{ fontSize: '12px', color: 'var(--mu-text-muted)', marginTop: '2px', marginLeft: '23px' }}>
-            Renta ${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')} · plan {planLabel} → renta efectiva ${Math.round(firmaFisicaRadar.effectiveRent).toLocaleString('es-MX')} para el radar
+            Renta ${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')}
+            {planLabel && ` · plan ${planLabel}`}
+            {firmaFisicaRadar.revenue != null && ` · revenue $${Math.round(firmaFisicaRadar.revenue).toLocaleString('es-MX')}`}
           </p>
         )}
 
