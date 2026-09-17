@@ -11,7 +11,8 @@
     "filter-municipalities": "node scripts/filterMunicipalities.js",
     "filter-firma-fisica": "node scripts/filterFirmaFisica.js",
     "fetch-municipios-osm": "node scripts/fetchMunicipiosOSM.js",
-    "geocode-cps": "node scripts/geocodeCPs.js"
+    "geocode-cps": "node scripts/geocodeCPs.js",
+    "geocode-signature-points": "node scripts/geocodeSignaturePoints.js"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.1",

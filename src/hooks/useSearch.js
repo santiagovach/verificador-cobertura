@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
 import firmaFisicaData from '../data/firmaFisica.json'
+import { checkSignatureRadar } from '../lib/coverageRadius.js'
+import { lookupLandlord } from '../utils/api.js'
 
 const CP_REGEX = /^\d{5}$/
 
@@ -180,7 +182,7 @@ export function useSearch() {
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const search = useCallback(async query => {
+  const search = useCallback(async (query, { dealId, accessToken } = {}) => {
     setIsLoading(true)
     setResult(null)
 
@@ -213,6 +215,25 @@ export function useSearch() {
         geocodedEstado = geo.estado
       }
 
+      // Radar de firma física por puntos (abogados/oficinas) ponderado por
+      // renta/PIC del deal — opcional, solo si nos dieron un dealId.
+      // Corre en paralelo a firmaFisicaStatus (CP/municipio), no lo reemplaza.
+      const resolveRadar = async (searchLat, searchLng) => {
+        if (!dealId || !accessToken || searchLat == null || searchLng == null) return null
+        try {
+          const landlordData = await lookupLandlord(accessToken, dealId)
+          if (landlordData.landlordAssigned === false) {
+            return { pending: true, reason: 'Este deal aún no tiene propietario asignado.' }
+          }
+          return checkSignatureRadar(
+            { lat: searchLat, lng: searchLng },
+            { rentAmount: landlordData.rentAmount, isPIC: landlordData.isPIC }
+          )
+        } catch (err) {
+          return { error: err.message }
+        }
+      }
+
       // 1. Exact CP match
       const exactEntry = coverageData.byCp[cp]
       if (exactEntry) {
@@ -223,6 +244,7 @@ export function useSearch() {
         setResult({
           hasCoverage: true,
           firmaFisicaStatus: checkFirmaFisica(cp, exactEntry.municipio, exactEntry.estado),
+          firmaFisicaRadar: await resolveRadar(lat, lng),
           cp,
           municipio: exactEntry.municipio,
           estado: exactEntry.estado,
@@ -239,6 +261,7 @@ export function useSearch() {
       setResult({
         hasCoverage: false,
         firmaFisicaStatus: null,
+        firmaFisicaRadar: await resolveRadar(lat, lng),
         cp,
         municipio: geocodedMunicipio,
         estado: geocodedEstado,

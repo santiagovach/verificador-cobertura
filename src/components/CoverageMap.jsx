@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Map, useMap, useApiIsLoaded } from '@vis.gl/react-google-maps'
+import signaturePointsData from '../data/signaturePoints.json'
+
+const SIGNATURE_POINTS = signaturePointsData.points.filter(p => p.lat != null && p.lng != null)
+
+const RADAR_TIERS_KM = [
+  { radiusKm: 6, color: '#0EA5E9' },
+  { radiusKm: 15, color: '#F59E0B' },
+  { radiusKm: 25, color: '#94A3B8' },
+]
 
 const DEFAULT_CENTER = { lat: 23.6345, lng: -102.5528 }
 const DEFAULT_ZOOM = 5
@@ -116,6 +125,68 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
       firmaLayer.setMap(null)
     }
   }, [map])
+
+  // Puntos de firma (abogados/oficinas) — marcadores estáticos siempre visibles
+  const signatureMarkersRef = useRef([])
+
+  useEffect(() => {
+    if (!map) return
+    const g = window.google?.maps
+    if (!g) return
+
+    const markers = SIGNATURE_POINTS.map(point => {
+      const isOficina = point.tipo === 'oficina'
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+          <circle cx="9" cy="9" r="7" fill="${isOficina ? '#671E75' : '#0EA5E9'}" stroke="white" stroke-width="2"/>
+        </svg>
+      `
+      const marker = new g.Marker({
+        position: { lat: point.lat, lng: point.lng },
+        map,
+        icon: {
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+          scaledSize: new g.Size(18, 18),
+          anchor: new g.Point(9, 9),
+        },
+        title: `${isOficina ? '🏢' : '⚖️'} ${point.nombre}`,
+        zIndex: 5,
+      })
+      return marker
+    })
+
+    signatureMarkersRef.current = markers
+    return () => markers.forEach(m => m.setMap(null))
+  }, [map])
+
+  // Círculos de radar (6/15/25km) alrededor del punto de firma más cercano al
+  // resultado buscado — solo se muestran cuando la búsqueda trae firmaFisicaRadar
+  // (requiere haber capturado un Deal ID).
+  const radarCirclesRef = useRef([])
+
+  useEffect(() => {
+    const g = window.google?.maps
+    radarCirclesRef.current.forEach(c => c.setMap(null))
+    radarCirclesRef.current = []
+
+    if (!map || !g) return
+    const radar = searchResult?.firmaFisicaRadar
+    if (!radar || radar.pending || radar.error) return
+
+    const point = SIGNATURE_POINTS.find(p => p.id === radar.nearestPoint?.id)
+    if (!point) return
+
+    radarCirclesRef.current = RADAR_TIERS_KM.map(({ radiusKm, color }) => new g.Circle({
+      map,
+      center: { lat: point.lat, lng: point.lng },
+      radius: radiusKm * 1000,
+      fillOpacity: 0,
+      strokeColor: color,
+      strokeWeight: 1.5,
+      strokeOpacity: 0.7,
+      clickable: false,
+    }))
+  }, [map, searchResult])
 
   // Pin marker for the searched CP/address
   const markerRef = useRef(null)

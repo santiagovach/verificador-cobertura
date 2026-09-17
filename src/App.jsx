@@ -136,7 +136,11 @@ export default function App() {
               gap: '20px',
             }}
           >
-            <SearchBar onSearch={search} onClear={clear} isLoading={isLoading} />
+            <SearchBar
+              onSearch={(query, opts) => search(query, { ...opts, accessToken: user.accessToken })}
+              onClear={clear}
+              isLoading={isLoading}
+            />
             {result && <ResultBanner result={result} />}
             <MapErrorBoundary>
               <CoverageMap searchResult={result?.error ? null : result} onMunicipalityClick={selectMunicipality} />

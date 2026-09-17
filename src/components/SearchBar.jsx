@@ -3,6 +3,7 @@ import { useMapsLibrary } from '@vis.gl/react-google-maps'
 
 export default function SearchBar({ onSearch, onClear, isLoading }) {
   const [query, setQuery] = useState('')
+  const [dealId, setDealId] = useState('')
   const [focused, setFocused] = useState(false)
   const inputRef = useRef(null)
   const places = useMapsLibrary('places')
@@ -20,19 +21,19 @@ export default function SearchBar({ onSearch, onClear, isLoading }) {
       const place = ac.getPlace()
       if (place?.formatted_address) {
         setQuery(place.formatted_address)
-        onSearch(place.formatted_address)
+        onSearch(place.formatted_address, { dealId: dealId.trim() || undefined })
       }
     })
 
     return () => {
       window.google.maps.event.removeListener(listener)
     }
-  }, [places]) // onSearch is stable (useCallback with no deps)
+  }, [places, dealId]) // onSearch is stable (useCallback with no deps)
 
   function handleSubmit(e) {
     e.preventDefault()
     const trimmed = query.trim()
-    if (trimmed) onSearch(trimmed)
+    if (trimmed) onSearch(trimmed, { dealId: dealId.trim() || undefined })
   }
 
   return (
@@ -157,6 +158,28 @@ export default function SearchBar({ onSearch, onClear, isLoading }) {
           )}
         </button>
       </form>
+
+      <div style={{ maxWidth: '580px', margin: '10px auto 0', textAlign: 'left' }}>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={dealId}
+          onChange={e => setDealId(e.target.value)}
+          placeholder="Deal ID (opcional) — calcula el radar de firma física por renta/PIC"
+          maxLength={20}
+          style={{
+            width: '100%',
+            padding: '10px 14px',
+            borderRadius: 'var(--mu-radius-sm)',
+            border: '1px solid var(--mu-border)',
+            fontSize: '13px',
+            fontFamily: 'var(--mu-font-ui)',
+            outline: 'none',
+            color: 'var(--mu-text-muted)',
+            boxSizing: 'border-box',
+          }}
+        />
+      </div>
     </section>
   )
 }

@@ -1,7 +1,9 @@
 export default function ResultBanner({ result }) {
   if (!result) return null
 
-  const { hasCoverage, firmaFisicaStatus, cp, municipio, estado, error } = result
+  const { hasCoverage, firmaFisicaStatus, firmaFisicaRadar, cp, municipio, estado, error } = result
+
+  const TIER_LABELS = { 0: 'Garantizada (≤6 km)', 1: 'Estándar (6-15 km)', 2: 'Excepcional (15-25 km)' }
 
   if (error) {
     return (
@@ -78,6 +80,32 @@ export default function ResultBanner({ result }) {
                   : firmaFisicaStatus === 'depende_cp' ? 'Varía por CP — busca tu código postal exacto'
                   : 'No disponible'}
               </span>
+            </p>
+          </div>
+        )}
+
+        {/* Bullet 3: Radar de firma física por punto (solo si se buscó con Deal ID) */}
+        {firmaFisicaRadar?.pending && (
+          <p style={{ fontSize: '13px', color: 'var(--mu-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+            📋 {firmaFisicaRadar.reason}
+          </p>
+        )}
+        {firmaFisicaRadar?.error && (
+          <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
+            ⚠️ No se pudo calcular el radar: {firmaFisicaRadar.error}
+          </p>
+        )}
+        {firmaFisicaRadar && !firmaFisicaRadar.pending && !firmaFisicaRadar.error && (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '6px' }}>
+            <span style={{ fontSize: '15px', color: firmaFisicaRadar.covered ? '#0284C7' : 'var(--mu-text-muted)' }}>●</span>
+            <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered ? '#0284C7' : 'var(--mu-text-muted)', fontFamily: 'var(--mu-font-ui)' }}>
+              Radar de firma:{' '}
+              <span style={{ fontWeight: '700' }}>
+                {firmaFisicaRadar.covered ? 'Cubierto' : 'Fuera de alcance'}
+              </span>
+              {' — '}
+              {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
+              {firmaFisicaRadar.tier != null && ` (capa ${TIER_LABELS[firmaFisicaRadar.tier]})`}
             </p>
           </div>
         )}

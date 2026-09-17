@@ -1,0 +1,148 @@
+{
+  "lastUpdated": "2026-09-15T21:48:35.338Z",
+  "points": [
+    {
+      "id": "abogado-mancera",
+      "nombre": "Francisco Javier Mancera Rodríguez",
+      "tipo": "abogado",
+      "direccion": "Cordilleras 49, Dep 103, Infonavit Iztacalco, Iztacalco, C.P. 09800, CDMX",
+      "lat": 19.3840964,
+      "lng": -99.1061694,
+      "geocodeMatch": "Colonia Iztacalco INFONAVIT, Ciudad de México, Iztacalco, Ciudad de México, 08900, México",
+      "geocodePrecision": "aproximada (matched: \"Infonavit Iztacalco, Iztacalco, Ciudad de México, México, México\")",
+      "confianza": "media"
+    },
+    {
+      "id": "abogado-silva",
+      "nombre": "Alitzel Angelica Silva Ordaz",
+      "tipo": "abogado",
+      "direccion": "Retorno 1 de sur 12c n. 6 interior 3, Col. Agrícola Oriental, C.P 08500, Alcaldía Iztacalco",
+      "lat": 19.3964015,
+      "lng": -99.0750502,
+      "geocodeMatch": "Retorno 1 Sur 12 B, Colonia Agrícola Oriental, Ciudad de México, Iztacalco, Ciudad de México, 08500, México",
+      "geocodePrecision": "aproximada (matched: \"Retorno 1 Sur 12C, Agrícola Oriental, Iztacalco, Ciudad de México, México\")",
+      "confianza": "media"
+    },
+    {
+      "id": "abogado-lopez",
+      "nombre": "Luis López",
+      "tipo": "abogado",
+      "direccion": "Calle 21, manzana 34, lote 13, Olivar del Conde, Primera Sección, Alvaro Obregón, Ciudad de México",
+      "lat": 19.3744819,
+      "lng": -99.2087385,
+      "geocodeMatch": "Calle 21, Colonia Olivar del Conde 1a. Sección, Presidentes, Ciudad de México, Álvaro Obregón, Ciudad de México, 01400, México",
+      "geocodePrecision": "aproximada (matched: \"Calle 21, Olivar del Conde 1a Sección, Álvaro Obregón, Ciudad de México, México\")",
+      "confianza": "media"
+    },
+    {
+      "id": "abogado-cruz-alexandro",
+      "nombre": "Alexandro Cruz",
+      "tipo": "abogado",
+      "direccion": "Calle Alzea, manzana 16, lote 7, Colonia Buenavista, Iztapalapa, Ciudad de México",
+      "lat": 19.3246891,
+      "lng": -99.0391431,
+      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Calle Azalea mz17 lt7, C.P. 09700, Buenavista, Ciudad de México)",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "abogado-galvan",
+      "nombre": "Angelica Galván",
+      "tipo": "abogado",
+      "direccion": "Calle Coronas 1982, Colonia Aquiles de Serdán 15430, Venustiano Carranza, Ciudad de México",
+      "lat": 19.4468011,
+      "lng": -99.0938684,
+      "geocodeMatch": "Calle Coronas, Aquiles Serdán, Ciudad de México, Venustiano Carranza, Ciudad de México, 15430, México",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "abogado-figueroa",
+      "nombre": "César Figueroa",
+      "tipo": "abogado",
+      "direccion": "calle Agustín Lara manzana 132 lote 19, Emiliano Zapata",
+      "lat": 19.3401911,
+      "lng": -98.9779091,
+      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Dolores del Río / Amp. Emiliano Zapata, C.P. 09638, Iztapalapa, Ciudad de México)",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "abogado-trejo",
+      "nombre": "Gabriela Trejo",
+      "tipo": "abogado",
+      "direccion": "Bahía de ballenas 28 Int. 14, Verónica Anzures, Cdmx, Código postal 11300, Miguel Hidalgo",
+      "lat": 19.4372045,
+      "lng": -99.1771936,
+      "geocodeMatch": "Calle Bahía de Ballenas, Verónica Anzures, Polanco, Ciudad de México, Miguel Hidalgo, Ciudad de México, 11300, México",
+      "geocodePrecision": "aproximada (matched: \"Bahía de Ballenas 28, Verónica Anzures, Miguel Hidalgo, Ciudad de México, México\")",
+      "confianza": "media"
+    },
+    {
+      "id": "abogado-cruz-amairani",
+      "nombre": "Amairani Cruz",
+      "tipo": "abogado",
+      "direccion": "Flor silvestre 212, Col. Benito Juárez, Cd. Nezahualcóyotl, Edo. Méx.",
+      "lat": 19.4079964,
+      "lng": -99.0079357,
+      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Flor Silvestre 212, Benito Juárez, 57000 Nezahualcóyotl, Méx.)",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "abogado-gonzalez",
+      "nombre": "Rebeca González",
+      "tipo": "abogado",
+      "direccion": "Calle Nahuataclas 12, Ajusco, Coyoacán, C.P. 04300, Ciudad de México",
+      "lat": 19.3277094,
+      "lng": -99.1517279,
+      "geocodeMatch": "Colonia Ajusco Huayamilpas, La Candelaria, Ciudad de México, Coyoacán, Ciudad de México, 04390, México",
+      "geocodePrecision": "aproximada (matched: \"Ajusco, Coyoacán, Ciudad de México, México, México\")",
+      "confianza": "media"
+    },
+    {
+      "id": "oficina-cdmx",
+      "nombre": "MoradaUno Oficina CDMX",
+      "tipo": "oficina",
+      "direccion": "Av. Insurgentes Sur 552, Roma Norte, Cuauhtémoc, 06760, Ciudad de México",
+      "lat": 19.4004594,
+      "lng": -99.1700329,
+      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (place 'MoradaUno')",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "oficina-gdl",
+      "nombre": "MoradaUno Oficina Gdl",
+      "tipo": "oficina",
+      "direccion": "Avenida Adolfo López Mateos Sur, 1480-PH N-B, Piso 7, Chapalita, 45040 Guadalajara, Jalisco",
+      "lat": 20.6626263,
+      "lng": -103.3956233,
+      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (place 'Morada Uno GDL')",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "oficina-qro",
+      "nombre": "MoradaUno Oficina QRO",
+      "tipo": "oficina",
+      "direccion": "Avenida Camino Real de Carretas Numero 104, Oficina 503, Colonia Milenio III, C.P. 76060 Querétaro, Qro",
+      "lat": 20.5992888,
+      "lng": -100.3635916,
+      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (place 'MoradaUno QRO')",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "oficina-tijuana",
+      "nombre": "MoradaUno Oficina Tijuana",
+      "tipo": "oficina",
+      "direccion": "PROL PASEO DE LOS HEROES, Calz. Escolar 5A, Agua Caliente, 22014 Tijuana, B.C.",
+      "lat": 32.5159867,
+      "lng": -117.0003865,
+      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Street View de Calz. Escolar 5A, Agua Caliente)",
+      "geocodePrecision": "exacta",
+      "confianza": "alta"
+    }
+  ]
+}
