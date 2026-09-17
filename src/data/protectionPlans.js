@@ -61,6 +61,16 @@ export const PROTECTION_PLANS = [
 
 export const PROPERTY_TYPES = ['Residencial', 'Comercial', 'Industrial']
 
+// tax_percent real de la tabla `office` en Metabase — Tijuana es zona
+// fronteriza (IVA 8%), el resto del país 16%.
+const IVA_BY_PLAZA = {
+  CDMX: 0.16,
+  Guadalajara: 0.16,
+  Querétaro: 0.16,
+  Puebla: 0.16,
+  Tijuana: 0.08,
+}
+
 const DEFAULT_PLAZA = 'CDMX'
 const DEFAULT_PROPERTY_TYPE = 'Residencial'
 
@@ -74,10 +84,11 @@ function resolveMinPayment(plan, plaza, propertyType) {
 }
 
 /**
- * Cobro mensual real (revenue) que le deja a MoradaUno esa renta bajo ese
- * plan — ya con el piso (pago mínimo) y el techo (renta máxima protegida)
- * reales de la plaza + tipo de inmueble. Este es el número en pesos, no
- * normalizado — para eso ver `effectiveRentForPlan`.
+ * Cobro real, ANTES de IVA, que le deja a MoradaUno esa renta bajo ese
+ * plan — un pago ÚNICO (no mensual: es % de UN mes de renta, cobrado una
+ * sola vez al firmar), ya con el piso (pago mínimo) y el techo (renta
+ * máxima protegida) reales de la plaza + tipo de inmueble. Para el monto
+ * final que se le cobra al cliente (con IVA), ver `revenueForPlan`.
  *
  * @param {number} rentAmount
  * @param {number} planId
@@ -95,6 +106,18 @@ export function actualFeeForPlan(rentAmount, planId, { plaza, propertyType } = {
     : rentAmount
   const minPayment = resolveMinPayment(plan, plaza || DEFAULT_PLAZA, type)
   return Math.max(protectedRent * rentPercent, minPayment)
+}
+
+/**
+ * Revenue real: el pago ÚNICO que se le cobra al cliente, con IVA de su
+ * plaza incluido (16% en general, 8% en Tijuana por ser zona fronteriza).
+ * Ej: renta $20,000, M3 Residencial → $6,000 + 16% IVA = $6,960.
+ */
+export function revenueForPlan(rentAmount, planId, ctx = {}) {
+  const fee = actualFeeForPlan(rentAmount, planId, ctx)
+  if (fee == null) return null
+  const iva = IVA_BY_PLAZA[ctx.plaza] ?? IVA_BY_PLAZA[DEFAULT_PLAZA]
+  return fee * (1 + iva)
 }
 
 /**

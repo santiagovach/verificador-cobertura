@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
 import PartyAutocomplete from './PartyAutocomplete.jsx'
 import { searchParty, searchOrganization } from '../utils/api.js'
-import { PROTECTION_PLANS, PROPERTY_TYPES } from '../data/protectionPlans.js'
+import { PROTECTION_PLANS, PROPERTY_TYPES, revenueForPlan } from '../data/protectionPlans.js'
 
 export default function SearchBar({ onSearch, onClear, isLoading, accessToken }) {
   const [query, setQuery] = useState('')
@@ -29,6 +29,13 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
   const fetchAgency = useCallback(q => searchOrganization(accessToken, q).then(rows =>
     rows.map(r => ({ id: r.id, primary: r.name, secondary: 'Inmobiliaria', raw: r }))
   ), [accessToken])
+
+  // Preview en vivo — plaza exacta se resuelve hasta buscar la dirección,
+  // así que este número usa CDMX como referencia y puede variar un poco
+  // una vez que se sepa la plaza real (los mínimos cambian por plaza).
+  const previewRevenue = rentAmount && planId
+    ? revenueForPlan(Number(rentAmount), Number(planId), { propertyType })
+    : null
 
   function buildOptions() {
     return {
@@ -273,6 +280,25 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
               ))}
             </select>
           </div>
+          {previewRevenue != null && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '0 4px',
+                fontSize: '13px',
+                color: 'var(--mu-purple-primary)',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Revenue: ${Math.round(previewRevenue).toLocaleString('es-MX')}
+              <span style={{ fontWeight: '400', fontSize: '11px', color: 'var(--mu-text-muted)' }}>
+                (pago único, incl. IVA)
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </section>
