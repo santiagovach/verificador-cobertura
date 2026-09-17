@@ -3,7 +3,7 @@ import coverageData from '../data/coverage.json'
 import firmaFisicaData from '../data/firmaFisica.json'
 import { checkSignatureRadar } from '../lib/coverageRadius.js'
 import { checkPIC } from '../utils/api.js'
-import { effectiveRentForPlan, revenueForPlan } from '../data/protectionPlans.js'
+import { effectiveRentForPlan, actualFeeForPlan } from '../data/protectionPlans.js'
 
 const CP_REGEX = /^\d{5}$/
 
@@ -247,7 +247,9 @@ export function useSearch() {
         // cada plan (no solo renta x %). Ver src/data/protectionPlans.js.
         // Sin plan seleccionado, no hay ajuste.
         const effectiveRent = hasRentAmount ? effectiveRentForPlan(rentAmount, planId, { plaza, propertyType }) : undefined
-        const revenue = hasRentAmount ? revenueForPlan(rentAmount, planId, { plaza, propertyType }) : null
+        // Revenue = cobro antes de IVA (lo que MoradaUno reconoce como
+        // ingreso; el IVA es un traspaso al SAT, no revenue).
+        const revenue = hasRentAmount ? actualFeeForPlan(rentAmount, planId, { plaza, propertyType }) : null
 
         const radar = checkSignatureRadar(
           { lat: searchLat, lng: searchLng },

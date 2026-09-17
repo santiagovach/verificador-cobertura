@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
 import PartyAutocomplete from './PartyAutocomplete.jsx'
 import { searchParty, searchOrganization } from '../utils/api.js'
-import { PROTECTION_PLANS, PROPERTY_TYPES, revenueForPlan } from '../data/protectionPlans.js'
+import { PROTECTION_PLANS, PROPERTY_TYPES, actualFeeForPlan } from '../data/protectionPlans.js'
 
 export default function SearchBar({ onSearch, onClear, isLoading, accessToken }) {
   const [query, setQuery] = useState('')
@@ -34,7 +34,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
   // así que este número usa CDMX como referencia y puede variar un poco
   // una vez que se sepa la plaza real (los mínimos cambian por plaza).
   const previewRevenue = rentAmount && planId
-    ? revenueForPlan(Number(rentAmount), Number(planId), { propertyType })
+    ? actualFeeForPlan(Number(rentAmount), Number(planId), { propertyType })
     : null
 
   function buildOptions() {
@@ -295,7 +295,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
             >
               Revenue: ${Math.round(previewRevenue).toLocaleString('es-MX')}
               <span style={{ fontWeight: '400', fontSize: '11px', color: 'var(--mu-text-muted)' }}>
-                (pago único, incl. IVA)
+                (pago único, antes de IVA)
               </span>
             </div>
           )}
