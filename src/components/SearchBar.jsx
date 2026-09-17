@@ -1,12 +1,39 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
+import PartyAutocomplete from './PartyAutocomplete.jsx'
+import { searchParty, searchOrganization } from '../utils/api.js'
 
-export default function SearchBar({ onSearch, onClear, isLoading }) {
+export default function SearchBar({ onSearch, onClear, isLoading, accessToken }) {
   const [query, setQuery] = useState('')
-  const [dealId, setDealId] = useState('')
+  const [rentAmount, setRentAmount] = useState('')
+  const [party, setParty] = useState(null) // { id, name, type: 'landlord'|'broker', organizationId }
+  const [agency, setAgency] = useState(null) // { id, name }
   const [focused, setFocused] = useState(false)
   const inputRef = useRef(null)
   const places = useMapsLibrary('places')
+
+  const fetchParty = useCallback(q => searchParty(accessToken, q).then(rows =>
+    rows.map(r => ({
+      id: r.id,
+      primary: r.name,
+      secondary: r.type === 'broker'
+        ? `Asesor${r.organizationName ? ' · ' + r.organizationName : ''}`
+        : 'Propietario',
+      raw: r,
+    }))
+  ), [accessToken])
+
+  const fetchAgency = useCallback(q => searchOrganization(accessToken, q).then(rows =>
+    rows.map(r => ({ id: r.id, primary: r.name, secondary: 'Inmobiliaria', raw: r }))
+  ), [accessToken])
+
+  function buildOptions() {
+    return {
+      rentAmount: rentAmount.trim() ? Number(rentAmount) : undefined,
+      party: party || undefined,
+      agency: agency || undefined,
+    }
+  }
 
   useEffect(() => {
     if (!places || !inputRef.current) return
@@ -21,19 +48,19 @@ export default function SearchBar({ onSearch, onClear, isLoading }) {
       const place = ac.getPlace()
       if (place?.formatted_address) {
         setQuery(place.formatted_address)
-        onSearch(place.formatted_address, { dealId: dealId.trim() || undefined })
+        onSearch(place.formatted_address, buildOptions())
       }
     })
 
     return () => {
       window.google.maps.event.removeListener(listener)
     }
-  }, [places, dealId]) // onSearch is stable (useCallback with no deps)
+  }, [places, rentAmount, party, agency]) // onSearch is stable (useCallback with no deps)
 
   function handleSubmit(e) {
     e.preventDefault()
     const trimmed = query.trim()
-    if (trimmed) onSearch(trimmed, { dealId: dealId.trim() || undefined })
+    if (trimmed) onSearch(trimmed, buildOptions())
   }
 
   return (
@@ -159,26 +186,45 @@ export default function SearchBar({ onSearch, onClear, isLoading }) {
         </button>
       </form>
 
-      <div style={{ maxWidth: '580px', margin: '10px auto 0', textAlign: 'left' }}>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={dealId}
-          onChange={e => setDealId(e.target.value)}
-          placeholder="Deal ID (opcional) — calcula el radar de firma física por renta/PIC"
-          maxLength={20}
-          style={{
-            width: '100%',
-            padding: '10px 14px',
-            borderRadius: 'var(--mu-radius-sm)',
-            border: '1px solid var(--mu-border)',
-            fontSize: '13px',
-            fontFamily: 'var(--mu-font-ui)',
-            outline: 'none',
-            color: 'var(--mu-text-muted)',
-            boxSizing: 'border-box',
-          }}
-        />
+      <div style={{ maxWidth: '640px', margin: '10px auto 0', textAlign: 'left' }}>
+        <p style={{ fontSize: '11.5px', color: 'var(--mu-text-muted)', marginBottom: '6px' }}>
+          Opcional — para calcular el radar de firma física antes de tener un deal:
+        </p>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 0 140px', minWidth: '140px' }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              value={rentAmount}
+              onChange={e => setRentAmount(e.target.value)}
+              placeholder="Monto de renta"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 'var(--mu-radius-sm)',
+                border: '1px solid var(--mu-border)',
+                fontSize: '13px',
+                fontFamily: 'var(--mu-font-ui)',
+                outline: 'none',
+                color: 'var(--mu-text)',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          <PartyAutocomplete
+            placeholder="Nombre asesor / propietario"
+            fetchResults={fetchParty}
+            onSelect={raw => setParty(raw)}
+            onClear={() => setParty(null)}
+          />
+          <PartyAutocomplete
+            placeholder="Nombre inmobiliaria"
+            fetchResults={fetchAgency}
+            onSelect={raw => setAgency(raw)}
+            onClear={() => setAgency(null)}
+          />
+        </div>
       </div>
     </section>
   )

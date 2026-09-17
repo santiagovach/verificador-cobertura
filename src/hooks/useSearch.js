@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
 import firmaFisicaData from '../data/firmaFisica.json'
 import { checkSignatureRadar } from '../lib/coverageRadius.js'
-import { lookupLandlord } from '../utils/api.js'
+import { checkPIC } from '../utils/api.js'
 
 const CP_REGEX = /^\d{5}$/
 
@@ -182,7 +182,7 @@ export function useSearch() {
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const search = useCallback(async (query, { dealId, accessToken } = {}) => {
+  const search = useCallback(async (query, { rentAmount, party, agency, accessToken } = {}) => {
     setIsLoading(true)
     setResult(null)
 
@@ -216,22 +216,35 @@ export function useSearch() {
       }
 
       // Radar de firma física por puntos (abogados/oficinas) ponderado por
-      // renta/PIC del deal — opcional, solo si nos dieron un dealId.
-      // Corre en paralelo a firmaFisicaStatus (CP/municipio), no lo reemplaza.
+      // renta/PIC — pensado para usarse ANTES de que exista un deal (Sales/CS
+      // decide si vale la pena avanzar). Si no se llenó ningún campo opcional
+      // (renta, asesor/propietario, inmobiliaria), no se calcula nada y la
+      // búsqueda se comporta igual que antes (respuesta estándar por CP).
       const resolveRadar = async (searchLat, searchLng) => {
-        if (!dealId || !accessToken || searchLat == null || searchLng == null) return null
+        const hasRentAmount = rentAmount != null && rentAmount !== '' && !Number.isNaN(rentAmount)
+        const hasParty = Boolean(party)
+        const hasAgency = Boolean(agency)
+        if ((!hasRentAmount && !hasParty && !hasAgency) || searchLat == null || searchLng == null) return null
+
+        let isPIC = false
         try {
-          const landlordData = await lookupLandlord(accessToken, dealId)
-          if (landlordData.landlordAssigned === false) {
-            return { pending: true, reason: 'Este deal aún no tiene propietario asignado.' }
+          const organizationIds = []
+          if (party?.type === 'broker' && party.organizationId) organizationIds.push(party.organizationId)
+          if (agency?.id) organizationIds.push(agency.id)
+          const landlordId = party?.type === 'landlord' ? party.id : undefined
+
+          if (landlordId || organizationIds.length > 0) {
+            const picResult = await checkPIC(accessToken, { landlordId, organizationIds })
+            isPIC = picResult.isPIC
           }
-          return checkSignatureRadar(
-            { lat: searchLat, lng: searchLng },
-            { rentAmount: landlordData.rentAmount, isPIC: landlordData.isPIC }
-          )
         } catch (err) {
           return { error: err.message }
         }
+
+        return checkSignatureRadar(
+          { lat: searchLat, lng: searchLng },
+          { rentAmount: hasRentAmount ? rentAmount : undefined, isPIC }
+        )
       }
 
       // 1. Exact CP match

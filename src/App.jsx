@@ -140,6 +140,7 @@ export default function App() {
               onSearch={(query, opts) => search(query, { ...opts, accessToken: user.accessToken })}
               onClear={clear}
               isLoading={isLoading}
+              accessToken={user.accessToken}
             />
             {result && <ResultBanner result={result} />}
             <MapErrorBoundary>

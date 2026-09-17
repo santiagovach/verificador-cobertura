@@ -84,18 +84,13 @@ export default function ResultBanner({ result }) {
           </div>
         )}
 
-        {/* Bullet 3: Radar de firma física por punto (solo si se buscó con Deal ID) */}
-        {firmaFisicaRadar?.pending && (
-          <p style={{ fontSize: '13px', color: 'var(--mu-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-            📋 {firmaFisicaRadar.reason}
-          </p>
-        )}
+        {/* Bullet 3: Radar de firma física por punto (solo si se llenó renta/asesor/inmobiliaria) */}
         {firmaFisicaRadar?.error && (
           <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
             ⚠️ No se pudo calcular el radar: {firmaFisicaRadar.error}
           </p>
         )}
-        {firmaFisicaRadar && !firmaFisicaRadar.pending && !firmaFisicaRadar.error && (
+        {firmaFisicaRadar && !firmaFisicaRadar.error && (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '6px' }}>
             <span style={{ fontSize: '15px', color: firmaFisicaRadar.covered ? '#0284C7' : 'var(--mu-text-muted)' }}>●</span>
             <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered ? '#0284C7' : 'var(--mu-text-muted)', fontFamily: 'var(--mu-font-ui)' }}>
@@ -106,6 +101,7 @@ export default function ResultBanner({ result }) {
               {' — '}
               {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
               {firmaFisicaRadar.tier != null && ` (capa ${TIER_LABELS[firmaFisicaRadar.tier]})`}
+              {firmaFisicaRadar.isPIC && ' · propietario/inmobiliaria PIC'}
             </p>
           </div>
         )}

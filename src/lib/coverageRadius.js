@@ -59,5 +59,7 @@ export function checkSignatureRadar(latlng, economics = {}) {
     tier,
     distanceKm,
     nearestPoint: { id: nearest.point.id, nombre: nearest.point.nombre, tipo: nearest.point.tipo },
+    rentAmount: economics.rentAmount ?? null,
+    isPIC: economics.isPIC ?? false,
   }
 }
