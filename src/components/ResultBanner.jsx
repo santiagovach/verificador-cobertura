@@ -1,9 +1,14 @@
+import { PROTECTION_PLANS } from '../data/protectionPlans.js'
+
 export default function ResultBanner({ result }) {
   if (!result) return null
 
   const { hasCoverage, firmaFisicaStatus, firmaFisicaRadar, cp, municipio, estado, error } = result
 
   const TIER_LABELS = { 0: 'Garantizada (≤6 km)', 1: 'Estándar (6-15 km)', 2: 'Excepcional (15-25 km)' }
+  const planLabel = firmaFisicaRadar?.planId
+    ? PROTECTION_PLANS.find(p => p.id === firmaFisicaRadar.planId)?.label
+    : null
 
   if (error) {
     return (
@@ -104,6 +109,11 @@ export default function ResultBanner({ result }) {
               {firmaFisicaRadar.isPIC && ' · propietario/inmobiliaria PIC'}
             </p>
           </div>
+        )}
+        {firmaFisicaRadar?.rentAmountRaw != null && planLabel && (
+          <p style={{ fontSize: '12px', color: 'var(--mu-text-muted)', marginTop: '2px', marginLeft: '23px' }}>
+            Renta ${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')} · plan {planLabel} → renta efectiva ${Math.round(firmaFisicaRadar.effectiveRent).toLocaleString('es-MX')} para el radar
+          </p>
         )}
 
         {!hasCoverage && (

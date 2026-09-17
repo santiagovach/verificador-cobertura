@@ -3,6 +3,7 @@ import coverageData from '../data/coverage.json'
 import firmaFisicaData from '../data/firmaFisica.json'
 import { checkSignatureRadar } from '../lib/coverageRadius.js'
 import { checkPIC } from '../utils/api.js'
+import { planMultiplier } from '../data/protectionPlans.js'
 
 const CP_REGEX = /^\d{5}$/
 
@@ -182,7 +183,7 @@ export function useSearch() {
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const search = useCallback(async (query, { rentAmount, party, agency, accessToken } = {}) => {
+  const search = useCallback(async (query, { rentAmount, planId, party, agency, accessToken } = {}) => {
     setIsLoading(true)
     setResult(null)
 
@@ -241,10 +242,18 @@ export function useSearch() {
           return { error: err.message }
         }
 
-        return checkSignatureRadar(
+        // El tipo de protección ajusta la renta "efectiva" para el radar —
+        // un plan más rentable (M12) cuenta como si la renta fuera más
+        // grande; uno menos rentable (Investigación), como más chica. Ver
+        // src/data/protectionPlans.js. Sin plan seleccionado, multiplica x1
+        // (sin cambio).
+        const effectiveRent = hasRentAmount ? rentAmount * planMultiplier(planId) : undefined
+
+        const radar = checkSignatureRadar(
           { lat: searchLat, lng: searchLng },
-          { rentAmount: hasRentAmount ? rentAmount : undefined, isPIC }
+          { rentAmount: effectiveRent, isPIC }
         )
+        return radar && { ...radar, rentAmountRaw: hasRentAmount ? rentAmount : null, planId: planId || null }
       }
 
       // 1. Exact CP match

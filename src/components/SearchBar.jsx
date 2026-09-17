@@ -2,10 +2,12 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
 import PartyAutocomplete from './PartyAutocomplete.jsx'
 import { searchParty, searchOrganization } from '../utils/api.js'
+import { PROTECTION_PLANS } from '../data/protectionPlans.js'
 
 export default function SearchBar({ onSearch, onClear, isLoading, accessToken }) {
   const [query, setQuery] = useState('')
   const [rentAmount, setRentAmount] = useState('')
+  const [planId, setPlanId] = useState('')
   const [party, setParty] = useState(null) // { id, name, type: 'landlord'|'broker', organizationId }
   const [agency, setAgency] = useState(null) // { id, name }
   const [focused, setFocused] = useState(false)
@@ -30,6 +32,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
   function buildOptions() {
     return {
       rentAmount: rentAmount.trim() ? Number(rentAmount) : undefined,
+      planId: planId ? Number(planId) : undefined,
       party: party || undefined,
       agency: agency || undefined,
     }
@@ -55,7 +58,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
     return () => {
       window.google.maps.event.removeListener(listener)
     }
-  }, [places, rentAmount, party, agency]) // onSearch is stable (useCallback with no deps)
+  }, [places, rentAmount, planId, party, agency]) // onSearch is stable (useCallback with no deps)
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -224,6 +227,29 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
             onSelect={raw => setAgency(raw)}
             onClear={() => setAgency(null)}
           />
+          <div style={{ flex: '0 0 170px', minWidth: '170px' }}>
+            <select
+              value={planId}
+              onChange={e => setPlanId(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 'var(--mu-radius-sm)',
+                border: '1px solid var(--mu-border)',
+                fontSize: '13px',
+                fontFamily: 'var(--mu-font-ui)',
+                outline: 'none',
+                color: planId ? 'var(--mu-text)' : 'var(--mu-text-muted)',
+                boxSizing: 'border-box',
+                background: '#fff',
+              }}
+            >
+              <option value="">Tipo de protección</option>
+              {PROTECTION_PLANS.map(p => (
+                <option key={p.id} value={p.id}>{p.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </section>
