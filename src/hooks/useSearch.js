@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
-import firmaFisicaData from '../data/firmaFisica.json'
 import { checkSignatureRadar } from '../lib/coverageRadius.js'
 import { checkPIC } from '../utils/api.js'
 import { effectiveRentForPlan, actualFeeForPlan } from '../data/protectionPlans.js'
@@ -50,84 +49,6 @@ function findCoveredMunicipality(googleMunicipio, googleEstado) {
   // cannot rely on normMun === normEst — just checking the state is enough.
   if (normalizeState(googleEstado) === 'ciudad de mexico') {
     return { municipio: googleMunicipio, estado: googleEstado }
-  }
-
-  return null
-}
-
-// ─── Cobertura de firma física ─────────────────────────────────────────────────
-
-const firmaFisicaMunicipalityMap = {}
-
-for (const { municipio, estado } of firmaFisicaData.municipalities) {
-  const key = `${normalize(municipio)}|||${normalize(estado)}`
-  firmaFisicaMunicipalityMap[key] = { municipio, estado }
-}
-
-// Querétaro y Guadalajara/Jalisco tienen cobertura exacta por CP (parcial dentro
-// del municipio), no municipio-completo — para esos estados el prefix fallback no
-// es válido: un CP cercano "Si" no dice nada sobre un CP "No" o sin revisar.
-const EXACT_ONLY_ESTADOS = new Set(firmaFisicaData.exactOnlyEstados || [])
-const firmaFisicaPrefixKeys = Object.keys(firmaFisicaData.byCp).filter(
-  cp => !EXACT_ONLY_ESTADOS.has(firmaFisicaData.byCp[cp].estado)
-)
-
-// Municipios que sí aparecen en el dataset exacto por CP (tienen al menos un CP
-// "Sí") — usado para el click en el mapa (sin CP puntual): ahí no podemos decir
-// disponible/no disponible para todo el municipio, solo que depende del CP.
-const exactOnlyMunicipioSet = new Set()
-for (const cp in firmaFisicaData.byCp) {
-  const { municipio, estado } = firmaFisicaData.byCp[cp]
-  if (EXACT_ONLY_ESTADOS.has(estado)) {
-    exactOnlyMunicipioSet.add(`${normalize(municipio)}|||${normalize(estado)}`)
-  }
-}
-
-const REVISAR_MUNICIPIOS = new Set(['milpa alta', 'xochimilco', 'tlahuac'])
-
-function firmaFisicaStatus(municipio, estado) {
-  const normEst = normalize(estado)
-  const normMun = normalize(municipio)
-  if (normEst === 'mexico' || normEst === 'estado de mexico') return 'revisar'
-  if (REVISAR_MUNICIPIOS.has(normMun)) return 'revisar'
-  return 'disponible'
-}
-
-function checkFirmaFisica(cp, geocodedMunicipio, geocodedEstado) {
-  // 1. Exact CP match
-  if (cp && firmaFisicaData.byCp[cp]) {
-    const { municipio, estado } = firmaFisicaData.byCp[cp]
-    return firmaFisicaStatus(municipio, estado)
-  }
-
-  // 2. No specific CP (e.g. clicking a municipio on the map) in a plaza with
-  //    exact-per-CP data — can't say disponible/no disponible for the whole
-  //    municipio, only that it depends on the CP.
-  if (!cp && geocodedMunicipio && geocodedEstado) {
-    const key = `${normalize(geocodedMunicipio)}|||${normalize(geocodedEstado)}`
-    if (exactOnlyMunicipioSet.has(key)) return 'depende_cp'
-  }
-
-  // 3. Municipality fallback
-  if (geocodedMunicipio && geocodedEstado) {
-    const normMun = normalize(geocodedMunicipio)
-    const normEst = normalizeState(geocodedEstado)
-    const entry = firmaFisicaMunicipalityMap[`${normMun}|||${normEst}`]
-    if (entry) return firmaFisicaStatus(entry.municipio, entry.estado)
-  }
-
-  // 4. CP prefix fallback — for CPs absent from the dataset but in the same alcaldía range.
-  //    CDMX geocoding returns "Ciudad de México" as locality (not the specific alcaldía), so
-  //    steps 1–2 both fail; matching a nearby CP by prefix reliably identifies the alcaldía.
-  if (cp) {
-    for (let len = cp.length - 1; len >= 3; len--) {
-      const prefix = cp.slice(0, len)
-      const match = firmaFisicaPrefixKeys.find(k => k.startsWith(prefix))
-      if (match) {
-        const { municipio, estado } = firmaFisicaData.byCp[match]
-        return firmaFisicaStatus(municipio, estado)
-      }
-    }
   }
 
   return null
@@ -268,7 +189,6 @@ export function useSearch() {
         }
         setResult({
           hasCoverage: true,
-          firmaFisicaStatus: checkFirmaFisica(cp, exactEntry.municipio, exactEntry.estado),
           firmaFisicaRadar: await resolveRadar(lat, lng, exactEntry.plaza),
           cp,
           municipio: exactEntry.municipio,
@@ -285,7 +205,6 @@ export function useSearch() {
       //    CP that was explicitly removed from the sheet.
       setResult({
         hasCoverage: false,
-        firmaFisicaStatus: null,
         firmaFisicaRadar: await resolveRadar(lat, lng),
         cp,
         municipio: geocodedMunicipio,
@@ -307,7 +226,6 @@ export function useSearch() {
     if (!munMatch) return
     setResult({
       hasCoverage: true,
-      firmaFisicaStatus: checkFirmaFisica(null, munMatch.municipio, munMatch.estado),
       cp: null,
       municipio: munMatch.municipio,
       estado: munMatch.estado,

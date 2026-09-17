@@ -12,11 +12,5 @@
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/sync-firma-fisica",
-      "schedule": "0 15 * * 1"
-    }
   ]
 }

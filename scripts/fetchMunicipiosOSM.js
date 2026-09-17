@@ -6,7 +6,6 @@
  * Corre este script cuando necesites actualizar los límites municipales.
  * Después de correrlo, re-corre:
  *   npm run filter-municipalities
- *   npm run filter-firma-fisica
  *
  * Uso: node scripts/fetchMunicipiosOSM.js
  */
@@ -206,7 +205,6 @@ async function main() {
   console.log(`   ${features.length} municipios totales`)
   console.log(`\nSiguientes pasos:`)
   console.log(`   npm run filter-municipalities`)
-  console.log(`   npm run filter-firma-fisica`)
 }
 
 main().catch(e => {
