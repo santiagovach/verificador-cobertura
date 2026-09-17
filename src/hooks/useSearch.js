@@ -233,9 +233,10 @@ export function useSearch() {
           if (party?.type === 'broker' && party.organizationId) organizationIds.push(party.organizationId)
           if (agency?.id) organizationIds.push(agency.id)
           const landlordId = party?.type === 'landlord' ? party.id : undefined
+          const brokerId = party?.type === 'broker' ? party.id : undefined
 
-          if (landlordId || organizationIds.length > 0) {
-            const picResult = await checkPIC(accessToken, { landlordId, organizationIds })
+          if (landlordId || brokerId || organizationIds.length > 0) {
+            const picResult = await checkPIC(accessToken, { landlordId, brokerId, organizationIds })
             isPIC = picResult.isPIC
           }
         } catch (err) {

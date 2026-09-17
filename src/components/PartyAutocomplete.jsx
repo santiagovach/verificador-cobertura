@@ -31,9 +31,17 @@ const LABEL_STYLE = {
  * usado para buscar propietario/asesor e inmobiliaria en Metabase mientras
  * el usuario escribe. `fetchResults(q)` debe regresar un array de
  * `{ id, primary, secondary, raw }`; `raw` es lo que se pasa a `onSelect`.
+ *
+ * `presetValue` permite que el padre imponga un texto desde afuera (ej.
+ * autollenar "Inmobiliaria" cuando se elige un asesor que pertenece a
+ * una) — cualquier cambio de valor reemplaza el texto mostrado.
  */
-export default function PartyAutocomplete({ label, placeholder, fetchResults, onSelect, onClear }) {
+export default function PartyAutocomplete({ label, placeholder, fetchResults, onSelect, onClear, presetValue }) {
   const [text, setText] = useState('')
+
+  useEffect(() => {
+    if (presetValue != null) setText(presetValue)
+  }, [presetValue])
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)

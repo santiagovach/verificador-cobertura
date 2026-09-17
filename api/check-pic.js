@@ -1,17 +1,26 @@
 /**
- * GET /api/check-pic?landlordId=123&organizationIds=456,789
+ * GET /api/check-pic?landlordId=123&brokerId=456&organizationIds=789,101
  *
- * Decide si un propietario y/o una o más inmobiliarias califican como PIC:
- * >10 rentas cerradas y renta promedio >= $20,000 en TODOS sus deals.
- * "Cerrada" se aproxima con agreement.signing_date IS NOT NULL (no existe
- * una columna literal de estatus "Closed" en MySQL).
+ * Decide si un propietario, un asesor y/o una o más inmobiliarias
+ * califican como PIC. Tres fuentes distintas:
  *
- * Una inmobiliaria califica agregando TODOS los deals de TODOS sus brokers.
- * Si la inmobiliaria es PIC, cualquiera de sus brokers hereda el estatus,
- * aunque ese broker en lo individual no llegue a >10 deals.
+ * 1. Propietario (landlordId): >10 rentas cerradas y renta promedio
+ *    >= $20,000 en TODOS sus deals (calculado — no hay flag directo para
+ *    propietarios). "Cerrada" se aproxima con agreement.signing_date IS
+ *    NOT NULL (no existe una columna literal de estatus "Closed").
+ * 2. Asesor (brokerId): flag DIRECTO y autoritativo —
+ *    broker_hubspot_data.perfil = 'PIC' (viene de HubSpot, no calculado
+ *    por esta app). Solo ~65% de los brokers tienen fila en esa tabla;
+ *    si no la tiene, este check simplemente no aplica (no cuenta como
+ *    "no PIC", solo como "sin dato" — puede seguir calificando por su
+ *    inmobiliaria).
+ * 3. Inmobiliaria (organizationIds): agregando TODOS los deals de TODOS
+ *    sus brokers, mismo umbral que propietario. Si la inmobiliaria
+ *    califica, cualquiera de sus brokers hereda el estatus aunque ese
+ *    broker en lo individual no llegue a >10 deals ni tenga perfil PIC.
  *
- * Acepta landlordId y/o organizationIds (al menos uno) — isPIC = true si
- * CUALQUIERA de los checks pasados califica.
+ * Acepta cualquier combinación de los tres — isPIC = true si CUALQUIERA
+ * de los checks pasados califica.
  *
  * Auth: Bearer <google_access_token>, cualquier cuenta @moradauno.com.
  */
@@ -90,6 +99,22 @@ async function checkLandlordPIC(landlordId) {
   }
 }
 
+async function checkBrokerPIC(brokerId) {
+  const rows = await queryMetabase(`
+    SELECT perfil
+    FROM broker_hubspot_data
+    WHERE broker_id = ${brokerId}
+    LIMIT 1
+  `)
+  const perfil = rows[0]?.perfil || null
+  return {
+    source: 'broker',
+    id: brokerId,
+    perfil,
+    qualifies: perfil === 'PIC',
+  }
+}
+
 async function checkOrganizationPIC(organizationId) {
   const rows = await queryMetabase(`
     SELECT
@@ -121,6 +146,7 @@ export default async function handler(req, res) {
   if (!email) return
 
   const landlordId = parseInt(req.query.landlordId, 10)
+  const brokerId = parseInt(req.query.brokerId, 10)
   const organizationIds = [...new Set(
     (req.query.organizationIds || '')
       .split(',')
@@ -128,13 +154,14 @@ export default async function handler(req, res) {
       .filter(Number.isInteger)
   )]
 
-  if (!Number.isInteger(landlordId) && organizationIds.length === 0) {
-    return res.status(400).json({ error: 'Se requiere landlordId y/o organizationIds' })
+  if (!Number.isInteger(landlordId) && !Number.isInteger(brokerId) && organizationIds.length === 0) {
+    return res.status(400).json({ error: 'Se requiere landlordId, brokerId y/o organizationIds' })
   }
 
   try {
     const checks = []
     if (Number.isInteger(landlordId)) checks.push(await checkLandlordPIC(landlordId))
+    if (Number.isInteger(brokerId)) checks.push(await checkBrokerPIC(brokerId))
     for (const orgId of organizationIds) checks.push(await checkOrganizationPIC(orgId))
 
     const matched = checks.find(c => c.qualifies)

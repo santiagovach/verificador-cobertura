@@ -38,9 +38,10 @@ export async function searchOrganization(accessToken, q) {
   return data.results
 }
 
-export async function checkPIC(accessToken, { landlordId, organizationIds } = {}) {
+export async function checkPIC(accessToken, { landlordId, brokerId, organizationIds } = {}) {
   const params = new URLSearchParams()
   if (landlordId) params.set('landlordId', landlordId)
+  if (brokerId) params.set('brokerId', brokerId)
   if (organizationIds?.length) params.set('organizationIds', organizationIds.join(','))
 
   return authorizedFetch(`${API_BASE}/api/check-pic?${params.toString()}`, {}, accessToken)

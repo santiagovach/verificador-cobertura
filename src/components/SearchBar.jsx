@@ -35,9 +35,21 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
   const [propertyType, setPropertyType] = useState('Residencial')
   const [party, setParty] = useState(null) // { id, name, type: 'landlord'|'broker', organizationId }
   const [agency, setAgency] = useState(null) // { id, name }
+  const [agencyPresetValue, setAgencyPresetValue] = useState(null)
   const [focused, setFocused] = useState(false)
   const inputRef = useRef(null)
   const places = useMapsLibrary('places')
+
+  // Si el asesor elegido pertenece a una inmobiliaria, autollenamos ese
+  // campo — Santiago pidió esto explícitamente para no repetir el mismo
+  // dato dos veces.
+  function handlePartySelect(raw) {
+    setParty(raw)
+    if (raw.type === 'broker' && raw.organizationId && raw.organizationName) {
+      setAgency({ id: raw.organizationId, name: raw.organizationName })
+      setAgencyPresetValue(raw.organizationName)
+    }
+  }
 
   const fetchParty = useCallback(q => searchParty(accessToken, q).then(rows =>
     rows.map(r => ({
@@ -269,13 +281,14 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
             label="Asesor / propietario"
             placeholder="Nombre o teléfono"
             fetchResults={fetchParty}
-            onSelect={raw => setParty(raw)}
+            onSelect={handlePartySelect}
             onClear={() => setParty(null)}
           />
           <PartyAutocomplete
             label="Inmobiliaria"
             placeholder="Nombre"
             fetchResults={fetchAgency}
+            presetValue={agencyPresetValue}
             onSelect={raw => setAgency(raw)}
             onClear={() => setAgency(null)}
           />
