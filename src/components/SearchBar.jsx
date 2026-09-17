@@ -2,12 +2,13 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
 import PartyAutocomplete from './PartyAutocomplete.jsx'
 import { searchParty, searchOrganization } from '../utils/api.js'
-import { PROTECTION_PLANS } from '../data/protectionPlans.js'
+import { PROTECTION_PLANS, PROPERTY_TYPES } from '../data/protectionPlans.js'
 
 export default function SearchBar({ onSearch, onClear, isLoading, accessToken }) {
   const [query, setQuery] = useState('')
   const [rentAmount, setRentAmount] = useState('')
   const [planId, setPlanId] = useState('')
+  const [propertyType, setPropertyType] = useState('Residencial')
   const [party, setParty] = useState(null) // { id, name, type: 'landlord'|'broker', organizationId }
   const [agency, setAgency] = useState(null) // { id, name }
   const [focused, setFocused] = useState(false)
@@ -33,6 +34,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
     return {
       rentAmount: rentAmount.trim() ? Number(rentAmount) : undefined,
       planId: planId ? Number(planId) : undefined,
+      propertyType,
       party: party || undefined,
       agency: agency || undefined,
     }
@@ -58,7 +60,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
     return () => {
       window.google.maps.event.removeListener(listener)
     }
-  }, [places, rentAmount, planId, party, agency]) // onSearch is stable (useCallback with no deps)
+  }, [places, rentAmount, planId, propertyType, party, agency]) // onSearch is stable (useCallback with no deps)
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -247,6 +249,28 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
               <option value="">Tipo de protección</option>
               {PROTECTION_PLANS.map(p => (
                 <option key={p.id} value={p.id}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: '0 0 150px', minWidth: '150px' }}>
+            <select
+              value={propertyType}
+              onChange={e => setPropertyType(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 'var(--mu-radius-sm)',
+                border: '1px solid var(--mu-border)',
+                fontSize: '13px',
+                fontFamily: 'var(--mu-font-ui)',
+                outline: 'none',
+                color: 'var(--mu-text)',
+                boxSizing: 'border-box',
+                background: '#fff',
+              }}
+            >
+              {PROPERTY_TYPES.map(t => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>

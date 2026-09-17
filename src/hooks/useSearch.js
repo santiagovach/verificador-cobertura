@@ -183,7 +183,7 @@ export function useSearch() {
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const search = useCallback(async (query, { rentAmount, planId, party, agency, accessToken } = {}) => {
+  const search = useCallback(async (query, { rentAmount, planId, propertyType, party, agency, accessToken } = {}) => {
     setIsLoading(true)
     setResult(null)
 
@@ -221,7 +221,7 @@ export function useSearch() {
       // decide si vale la pena avanzar). Si no se llenó ningún campo opcional
       // (renta, asesor/propietario, inmobiliaria), no se calcula nada y la
       // búsqueda se comporta igual que antes (respuesta estándar por CP).
-      const resolveRadar = async (searchLat, searchLng) => {
+      const resolveRadar = async (searchLat, searchLng, plaza) => {
         const hasRentAmount = rentAmount != null && rentAmount !== '' && !Number.isNaN(rentAmount)
         const hasParty = Boolean(party)
         const hasAgency = Boolean(agency)
@@ -246,7 +246,7 @@ export function useSearch() {
         // ya considerando el pago mínimo y el tope de renta protegida de
         // cada plan (no solo renta x %). Ver src/data/protectionPlans.js.
         // Sin plan seleccionado, no hay ajuste.
-        const effectiveRent = hasRentAmount ? effectiveRentForPlan(rentAmount, planId) : undefined
+        const effectiveRent = hasRentAmount ? effectiveRentForPlan(rentAmount, planId, { plaza, propertyType }) : undefined
 
         const radar = checkSignatureRadar(
           { lat: searchLat, lng: searchLng },
@@ -265,7 +265,7 @@ export function useSearch() {
         setResult({
           hasCoverage: true,
           firmaFisicaStatus: checkFirmaFisica(cp, exactEntry.municipio, exactEntry.estado),
-          firmaFisicaRadar: await resolveRadar(lat, lng),
+          firmaFisicaRadar: await resolveRadar(lat, lng, exactEntry.plaza),
           cp,
           municipio: exactEntry.municipio,
           estado: exactEntry.estado,

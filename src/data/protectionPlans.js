@@ -1,47 +1,98 @@
 // Catálogo de tipos de protección — SOLO los 4 productos vigentes que
-// vendemos (Protección MLegal, M3, M6, M12). IDs son los reales de la tabla
-// `sub_product` en Metabase (verificado 2026-09-17: DESCRIBE + SELECT sobre
-// sub_product), no inventados. Tarifas, mínimos y máximos son los oficiales
-// publicados en las tarjetas de producto — no promedios de `agreement.cost_percent`.
+// vendemos (MLegal, M3, M6, M12). IDs reales de `sub_product` en Metabase.
+// Tarifas/mínimos/topes vienen de `sub_product_variation` (verificado
+// 2026-09-17 contra Metabase — join sub_product_variation + sub_product +
+// office), NO de la tarjeta de producto ni de promedios de agreement.cost_percent.
 //
-// - costPercent: % de un mes de renta + IVA (tarifa regular; M6 tiene una
-//   promo de lanzamiento al 40% vigente sobre su 45% regular — se usa la
-//   tarifa regular como referencia estable).
-// - minPayment: pago mínimo mensual (aplica aunque renta × costPercent salga
-//   más bajo — ej. MLegal nunca cobra menos de $4,000+IVA aunque la renta
-//   sea de $2,000).
-// - maxProtectedRent: tope de renta que se protege (arriba de eso, el costo
-//   ya no sigue creciendo) — MLegal no tiene tope.
+// `sub_product_variation` es real: varía por office_id (plaza) Y por
+// `type` (Residencial/Comercial/Industrial/All). Hallazgos:
+// - rent_percent y rent_max_value son iguales en las 5 plazas para cada
+//   plan — solo el MÍNIMO (`revenue_min`) varía por plaza.
+// - M6 y M12 SOLO existen como "Residencial" (o "All") — no hay tarifa
+//   Comercial/Industrial para ellos; si se elige otro tipo de inmueble,
+//   se usa la misma tarifa Residencial (no hay otra en el sistema).
+// - M3 sí cambia fuerte por tipo: 30% Residencial vs 50% Comercial (min
+//   $5,000 vs $7,500). MLegal es 25% en los 3 tipos, solo cambia el mínimo.
+// - MLegal SÍ tiene tope de $150,000 en la base de datos, aunque la
+//   tarjeta de producto dice "no aplica monto máximo" — Santiago confirmó
+//   usar el dato real de la base (150,000), no la tarjeta.
 export const PROTECTION_PLANS = [
-  { id: 17, label: 'M Legal', costPercent: 0.25, minPayment: 4000, maxProtectedRent: null },
-  { id: 2, label: 'M3', costPercent: 0.30, minPayment: 5000, maxProtectedRent: 150000 },
-  { id: 34, label: 'M6', costPercent: 0.45, minPayment: 6000, maxProtectedRent: 150000 },
-  { id: 4, label: 'M12', costPercent: 0.60, minPayment: 6000, maxProtectedRent: 100000 },
+  {
+    id: 17,
+    label: 'M Legal',
+    ratesByType: { Residencial: 0.25, Comercial: 0.25, Industrial: 0.25 },
+    maxProtectedRent: 150000,
+    minByPlaza: {
+      CDMX: { Residencial: 4000, Comercial: 5000, Industrial: 5000 },
+      Guadalajara: { Residencial: 3750, Comercial: 3750, Industrial: 3750 },
+      Querétaro: { Residencial: 4000, Comercial: 5000, Industrial: 5000 },
+      Puebla: { Residencial: 4000, Comercial: 5000, Industrial: 5000 },
+      Tijuana: { Residencial: 4000, Comercial: 5000, Industrial: 5000 },
+    },
+  },
+  {
+    id: 2,
+    label: 'M3',
+    ratesByType: { Residencial: 0.30, Comercial: 0.50, Industrial: 0.50 },
+    maxProtectedRent: 150000,
+    minByPlaza: {
+      CDMX: { Residencial: 5000, Comercial: 7500, Industrial: 7500 },
+      Guadalajara: { Residencial: 3750, Comercial: 7500, Industrial: 7500 },
+      Querétaro: { Residencial: 4000, Comercial: 7500, Industrial: 7500 },
+      Puebla: { Residencial: 4000, Comercial: 7500, Industrial: 7500 },
+      Tijuana: { Residencial: 5000, Comercial: 7500, Industrial: 7500 },
+    },
+  },
+  {
+    id: 34,
+    label: 'M6',
+    ratesByType: { Residencial: 0.45, Comercial: 0.45, Industrial: 0.45 },
+    maxProtectedRent: 150000,
+    flatMinPayment: 6000, // uniforme en las 5 plazas, solo existe "Residencial"
+  },
+  {
+    id: 4,
+    label: 'M12',
+    ratesByType: { Residencial: 0.60, Comercial: 0.60, Industrial: 0.60 },
+    maxProtectedRent: 100000,
+    flatMinPayment: 6000, // uniforme en las 5 plazas, solo existe "Residencial"
+  },
 ]
 
-// M3 como línea base histórica del radar (30% de un mes de renta).
+export const PROPERTY_TYPES = ['Residencial', 'Comercial', 'Industrial']
+
+const DEFAULT_PLAZA = 'CDMX'
+const DEFAULT_PROPERTY_TYPE = 'Residencial'
+
+// M3 Residencial (30%) como línea base histórica del radar.
 const BASELINE_COST_PERCENT = 0.30
 
+function resolveMinPayment(plan, plaza, propertyType) {
+  if (plan.flatMinPayment != null) return plan.flatMinPayment
+  const plazaTable = plan.minByPlaza[plaza] || plan.minByPlaza[DEFAULT_PLAZA]
+  return plazaTable[propertyType] ?? plazaTable[DEFAULT_PROPERTY_TYPE]
+}
+
 /**
- * Convierte renta + plan en una "renta efectiva" para el radar, ya
- * considerando el piso (pago mínimo) y el techo (renta máxima protegida)
- * de cada plan — no solo renta x %.
+ * Convierte renta + plan + plaza + tipo de inmueble en una "renta efectiva"
+ * para el radar, ya con el piso (pago mínimo) y el techo (renta máxima
+ * protegida) reales de cada combinación.
  *
- * 1. Se aplica el techo de renta protegida (si el plan tiene uno).
- * 2. Se calcula el cobro real: max(renta_protegida x %, pago_mínimo).
- * 3. Se vuelve a expresar en "renta equivalente" usando el % de M3, para
- *    que las mismas capas ($25k/$60k) sigan siendo comparables sin
- *    importar qué plan se eligió.
+ * @param {number} rentAmount
+ * @param {number} planId
+ * @param {{plaza?: string, propertyType?: 'Residencial'|'Comercial'|'Industrial'}} ctx
  */
-export function effectiveRentForPlan(rentAmount, planId) {
+export function effectiveRentForPlan(rentAmount, planId, { plaza, propertyType } = {}) {
   if (!rentAmount) return 0
   const plan = PROTECTION_PLANS.find(p => p.id === planId)
   if (!plan) return rentAmount // sin plan seleccionado: sin ajuste
 
+  const type = propertyType || DEFAULT_PROPERTY_TYPE
+  const rentPercent = plan.ratesByType[type] ?? plan.ratesByType[DEFAULT_PROPERTY_TYPE]
   const protectedRent = plan.maxProtectedRent != null
     ? Math.min(rentAmount, plan.maxProtectedRent)
     : rentAmount
-
-  const actualFee = Math.max(protectedRent * plan.costPercent, plan.minPayment)
+  const minPayment = resolveMinPayment(plan, plaza || DEFAULT_PLAZA, type)
+  const actualFee = Math.max(protectedRent * rentPercent, minPayment)
   return actualFee / BASELINE_COST_PERCENT
 }
