@@ -43,9 +43,10 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
     rows.map(r => ({
       id: r.id,
       primary: r.name,
-      secondary: r.type === 'broker'
-        ? `Asesor${r.organizationName ? ' · ' + r.organizationName : ''}`
-        : 'Propietario',
+      secondary: [
+        r.type === 'broker' ? `Asesor${r.organizationName ? ' · ' + r.organizationName : ''}` : 'Propietario',
+        r.phone,
+      ].filter(Boolean).join(' · '),
       raw: r,
     }))
   ), [accessToken])
@@ -266,7 +267,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
           </div>
           <PartyAutocomplete
             label="Asesor / propietario"
-            placeholder="Nombre"
+            placeholder="Nombre o teléfono"
             fetchResults={fetchParty}
             onSelect={raw => setParty(raw)}
             onClear={() => setParty(null)}

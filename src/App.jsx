@@ -1,4 +1,4 @@
-import { useState, Component } from 'react'
+import { useState, useEffect, Component } from 'react'
 
 class MapErrorBoundary extends Component {
   state = { error: null }
@@ -23,7 +23,7 @@ import AdminPanel from './components/AdminPanel.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useSearch } from './hooks/useSearch.js'
 
-function LoginPrompt({ onSignIn }) {
+function LoginPrompt({ onSignIn, sessionExpired }) {
   return (
     <main
       style={{
@@ -63,6 +63,11 @@ function LoginPrompt({ onSignIn }) {
         >
           Verificador de Cobertura
         </h2>
+        {sessionExpired && (
+          <p style={{ color: 'var(--mu-warning)', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+            Tu sesión expiró — vuelve a iniciar sesión para seguir usando el radar de firma física.
+          </p>
+        )}
         <p style={{ color: 'var(--mu-text-muted)', fontSize: '15px', maxWidth: '360px' }}>
           Esta herramienta es exclusiva para el equipo MoradaUno. Inicia sesión
           con tu cuenta <strong>@moradauno.com</strong> para continuar.
@@ -114,6 +119,20 @@ export default function App() {
   const { user, isAdmin, signIn, signOut } = useAuth()
   const { result, isLoading, search, clear, selectMunicipality } = useSearch()
   const [showAdmin, setShowAdmin] = useState(false)
+  const [sessionExpired, setSessionExpired] = useState(false)
+
+  // Los tokens de Google (login implícito) expiran ~1h sin refresh — si
+  // cualquier llamada del radar (búsqueda de asesor/propietario/
+  // inmobiliaria, PIC) recibe un 401, cerramos sesión limpio en vez de
+  // dejar los campos fallando en silencio.
+  useEffect(() => {
+    function handleSessionExpired() {
+      setSessionExpired(true)
+      signOut()
+    }
+    window.addEventListener('mu:session-expired', handleSessionExpired)
+    return () => window.removeEventListener('mu:session-expired', handleSessionExpired)
+  }, [signOut])
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
@@ -122,7 +141,7 @@ export default function App() {
         <Header user={user} onSignIn={signIn} onSignOut={signOut} />
 
         {!user ? (
-          <LoginPrompt onSignIn={signIn} />
+          <LoginPrompt onSignIn={signIn} sessionExpired={sessionExpired} />
         ) : (
           <main
             style={{

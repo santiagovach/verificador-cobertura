@@ -1,10 +1,15 @@
 /**
  * GET /api/search-party?q=juan
  *
- * Autocomplete de "asesor / propietario": busca por nombre parcial en
- * `landlord` y `broker` (Metabase), para usarse ANTES de que exista un
- * deal — Sales/CS lo usan para saber si vale la pena avanzar, no para
- * revisar un deal ya cerrado.
+ * Autocomplete de "asesor / propietario": busca por nombre O teléfono
+ * parcial en `landlord` y `broker` (Metabase), para usarse ANTES de que
+ * exista un deal — Sales/CS lo usan para saber si vale la pena avanzar,
+ * no para revisar un deal ya cerrado.
+ *
+ * El teléfono se compara normalizado (sin espacios/guiones/+) porque así
+ * está guardado de forma inconsistente en la base ("+52 5551044455",
+ * "4424397797", "55 4870 2698", etc.) — solo se activa esa comparación
+ * si el texto tiene al menos 4 dígitos, para no matchear todo por accidente.
  *
  * Auth: Bearer <google_access_token>, cualquier cuenta @moradauno.com.
  */
@@ -75,15 +80,18 @@ export default async function handler(req, res) {
   if (q.length < 2) return res.status(200).json({ results: [] })
 
   const escaped = escapeSqlString(q)
+  const digits = q.replace(/\D/g, '')
+  const normalizedPhone = "REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '')"
+  const phoneClause = digits.length >= 4 ? ` OR ${normalizedPhone} LIKE '%${digits}%'` : ''
 
   try {
     const rows = await queryMetabase(`
       (SELECT id, name, phone, NULL AS organization_id, NULL AS organization_name, 'landlord' AS party_type
-       FROM landlord WHERE name LIKE '%${escaped}%' ORDER BY name LIMIT 6)
+       FROM landlord WHERE (name LIKE '%${escaped}%'${phoneClause}) ORDER BY name LIMIT 6)
       UNION ALL
       (SELECT b.id, b.name, b.phone, b.organization_id, bo.name AS organization_name, 'broker' AS party_type
        FROM broker b LEFT JOIN broker_organization bo ON b.organization_id = bo.id
-       WHERE b.name LIKE '%${escaped}%' ORDER BY b.name LIMIT 6)
+       WHERE (b.name LIKE '%${escaped}%'${phoneClause.replaceAll('phone', 'b.phone')}) ORDER BY b.name LIMIT 6)
     `)
 
     const results = rows.map(r => ({
