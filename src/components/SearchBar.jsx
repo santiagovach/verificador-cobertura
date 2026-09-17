@@ -4,6 +4,30 @@ import PartyAutocomplete from './PartyAutocomplete.jsx'
 import { searchParty, searchOrganization } from '../utils/api.js'
 import { PROTECTION_PLANS, PROPERTY_TYPES, actualFeeForPlan } from '../data/protectionPlans.js'
 
+const FIELD_STYLE = {
+  width: '100%',
+  height: '40px',
+  padding: '0 12px',
+  borderRadius: 'var(--mu-radius-sm)',
+  border: '1px solid var(--mu-border)',
+  fontSize: '14px',
+  fontFamily: 'var(--mu-font-ui)',
+  outline: 'none',
+  color: 'var(--mu-text)',
+  boxSizing: 'border-box',
+  background: '#fff',
+}
+
+const FIELD_LABEL_STYLE = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: '600',
+  letterSpacing: '0.03em',
+  textTransform: 'uppercase',
+  color: 'var(--mu-text-muted)',
+  marginBottom: '6px',
+}
+
 export default function SearchBar({ onSearch, onClear, isLoading, accessToken }) {
   const [query, setQuery] = useState('')
   const [rentAmount, setRentAmount] = useState('')
@@ -87,7 +111,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
           marginBottom: '10px',
         }}
       >
-        ¿Tienes cobertura MoradaUno?
+        ¿Existe cobertura MoradaUno?
       </h1>
       <p
         style={{
@@ -198,82 +222,81 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
         </button>
       </form>
 
-      <div style={{ maxWidth: '640px', margin: '10px auto 0', textAlign: 'left' }}>
-        <p style={{ fontSize: '11.5px', color: 'var(--mu-text-muted)', marginBottom: '6px' }}>
-          Opcional — para calcular el radar de firma física antes de tener un deal:
+      <div
+        style={{
+          maxWidth: '760px',
+          margin: '24px auto 0',
+          textAlign: 'left',
+          background: 'var(--mu-bg-subtle)',
+          border: '1px solid var(--mu-border)',
+          borderRadius: 'var(--mu-radius)',
+          padding: '20px 24px',
+        }}
+      >
+        <p
+          style={{
+            fontSize: '11px',
+            fontWeight: '700',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            color: 'var(--mu-purple-primary)',
+            marginBottom: '16px',
+          }}
+        >
+          Opcional — radar de firma física antes de tener un deal
         </p>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <div style={{ flex: '0 0 140px', minWidth: '140px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: '14px',
+            alignItems: 'end',
+          }}
+        >
+          <div>
+            <label style={FIELD_LABEL_STYLE}>Monto de renta</label>
             <input
               type="text"
               inputMode="numeric"
               value={rentAmount ? `$${Number(rentAmount).toLocaleString('es-MX')}` : ''}
               onChange={e => setRentAmount(e.target.value.replace(/\D/g, ''))}
-              placeholder="Monto de renta"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 'var(--mu-radius-sm)',
-                border: '1px solid var(--mu-border)',
-                fontSize: '13px',
-                fontFamily: 'var(--mu-font-ui)',
-                outline: 'none',
-                color: 'var(--mu-text)',
-                boxSizing: 'border-box',
-              }}
+              placeholder="$0"
+              style={FIELD_STYLE}
             />
           </div>
           <PartyAutocomplete
-            placeholder="Nombre asesor / propietario"
+            label="Asesor / propietario"
+            placeholder="Nombre"
             fetchResults={fetchParty}
             onSelect={raw => setParty(raw)}
             onClear={() => setParty(null)}
           />
           <PartyAutocomplete
-            placeholder="Nombre inmobiliaria"
+            label="Inmobiliaria"
+            placeholder="Nombre"
             fetchResults={fetchAgency}
             onSelect={raw => setAgency(raw)}
             onClear={() => setAgency(null)}
           />
-          <div style={{ flex: '0 0 170px', minWidth: '170px' }}>
+          <div>
+            <label style={FIELD_LABEL_STYLE}>Plan de protección</label>
             <select
               value={planId}
               onChange={e => setPlanId(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 'var(--mu-radius-sm)',
-                border: '1px solid var(--mu-border)',
-                fontSize: '13px',
-                fontFamily: 'var(--mu-font-ui)',
-                outline: 'none',
-                color: planId ? 'var(--mu-text)' : 'var(--mu-text-muted)',
-                boxSizing: 'border-box',
-                background: '#fff',
-              }}
+              style={{ ...FIELD_STYLE, color: planId ? 'var(--mu-text)' : 'var(--mu-text-muted)' }}
             >
-              <option value="">Tipo de protección</option>
+              <option value="">Sin especificar</option>
               {PROTECTION_PLANS.map(p => (
                 <option key={p.id} value={p.id}>{p.label}</option>
               ))}
             </select>
           </div>
-          <div style={{ flex: '0 0 150px', minWidth: '150px' }}>
+          <div>
+            <label style={FIELD_LABEL_STYLE}>Tipo de inmueble</label>
             <select
               value={propertyType}
               onChange={e => setPropertyType(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 'var(--mu-radius-sm)',
-                border: '1px solid var(--mu-border)',
-                fontSize: '13px',
-                fontFamily: 'var(--mu-font-ui)',
-                outline: 'none',
-                color: 'var(--mu-text)',
-                boxSizing: 'border-box',
-                background: '#fff',
-              }}
+              style={FIELD_STYLE}
             >
               {PROPERTY_TYPES.map(t => (
                 <option key={t} value={t}>{t}</option>
@@ -281,22 +304,25 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
             </select>
           </div>
           {previewRevenue != null && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '0 4px',
-                fontSize: '13px',
-                color: 'var(--mu-purple-primary)',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Revenue: ${Math.round(previewRevenue).toLocaleString('es-MX')}
-              <span style={{ fontWeight: '400', fontSize: '11px', color: 'var(--mu-text-muted)' }}>
-                (pago único, antes de IVA)
-              </span>
+            <div>
+              <label style={FIELD_LABEL_STYLE}>Revenue</label>
+              <div
+                style={{
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 'var(--mu-radius-sm)',
+                  background: 'var(--mu-purple-primary)',
+                  color: '#fff',
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  fontFamily: 'var(--mu-font-ui)',
+                  boxSizing: 'border-box',
+                }}
+              >
+                ${Math.round(previewRevenue).toLocaleString('es-MX')}
+              </div>
             </div>
           )}
         </div>

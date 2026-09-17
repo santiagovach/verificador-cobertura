@@ -2,6 +2,30 @@ import { useState, useRef, useEffect } from 'react'
 
 const DEBOUNCE_MS = 300
 
+const FIELD_STYLE = {
+  width: '100%',
+  height: '40px',
+  padding: '0 12px',
+  borderRadius: 'var(--mu-radius-sm)',
+  border: '1px solid var(--mu-border)',
+  fontSize: '14px',
+  fontFamily: 'var(--mu-font-ui)',
+  outline: 'none',
+  color: 'var(--mu-text)',
+  boxSizing: 'border-box',
+  background: '#fff',
+}
+
+const LABEL_STYLE = {
+  display: 'block',
+  fontSize: '11px',
+  fontWeight: '600',
+  letterSpacing: '0.03em',
+  textTransform: 'uppercase',
+  color: 'var(--mu-text-muted)',
+  marginBottom: '6px',
+}
+
 /**
  * Input de texto con autocomplete contra un endpoint propio (no Google) —
  * usado para buscar propietario/asesor e inmobiliaria en Metabase mientras
@@ -13,6 +37,7 @@ export default function PartyAutocomplete({ label, placeholder, fetchResults, on
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [focused, setFocused] = useState(false)
   const debounceRef = useRef(null)
   const containerRef = useRef(null)
 
@@ -58,31 +83,30 @@ export default function PartyAutocomplete({ label, placeholder, fetchResults, on
   }
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-      <input
-        type="text"
-        value={text}
-        onChange={handleChange}
-        onFocus={() => results.length > 0 && setOpen(true)}
-        placeholder={placeholder}
-        autoComplete="off"
-        style={{
-          width: '100%',
-          padding: '10px 14px',
-          borderRadius: 'var(--mu-radius-sm)',
-          border: '1px solid var(--mu-border)',
-          fontSize: '13px',
-          fontFamily: 'var(--mu-font-ui)',
-          outline: 'none',
-          color: 'var(--mu-text)',
-          boxSizing: 'border-box',
-        }}
-      />
-      {label && (
-        <span style={{ fontSize: '11px', color: 'var(--mu-text-muted)', display: 'block', marginTop: '4px' }}>
-          {label}
-        </span>
-      )}
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      {label && <label style={LABEL_STYLE}>{label}</label>}
+      <div style={{ position: 'relative' }}>
+        <input
+          type="text"
+          value={text}
+          onChange={handleChange}
+          onFocus={() => { setFocused(true); if (results.length > 0) setOpen(true) }}
+          onBlur={() => setFocused(false)}
+          placeholder={placeholder}
+          autoComplete="off"
+          style={{
+            ...FIELD_STYLE,
+            paddingRight: '30px',
+            border: `1px solid ${focused ? 'var(--mu-purple-primary)' : 'var(--mu-border)'}`,
+            boxShadow: focused ? '0 0 0 3px rgba(131, 38, 148, 0.1)' : 'none',
+          }}
+        />
+        {loading && (
+          <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: 'var(--mu-text-muted)' }}>
+            …
+          </span>
+        )}
+      </div>
       {open && (
         <ul
           role="listbox"
@@ -91,10 +115,10 @@ export default function PartyAutocomplete({ label, placeholder, fetchResults, on
             top: 'calc(100% + 4px)',
             left: 0,
             right: 0,
-            background: 'var(--mu-surface, #fff)',
+            background: '#fff',
             border: '1px solid var(--mu-border)',
             borderRadius: 'var(--mu-radius-sm)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            boxShadow: 'var(--mu-shadow)',
             zIndex: 20,
             maxHeight: '220px',
             overflowY: 'auto',
@@ -127,11 +151,6 @@ export default function PartyAutocomplete({ label, placeholder, fetchResults, on
             </li>
           ))}
         </ul>
-      )}
-      {loading && (
-        <span style={{ position: 'absolute', right: '12px', top: '11px', fontSize: '11px', color: 'var(--mu-text-muted)' }}>
-          …
-        </span>
       )}
     </div>
   )
