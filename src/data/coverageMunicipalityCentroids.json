@@ -1,0 +1,671 @@
+{
+  "lastUpdated": "2026-09-18T16:42:50.263Z",
+  "points": [
+    {
+      "municipio": "Azcapotzalco",
+      "estado": "Ciudad de México",
+      "lat": 19.4838908,
+      "lng": -99.1843937
+    },
+    {
+      "municipio": "Benito Juárez",
+      "estado": "Ciudad de México",
+      "lat": 19.3718796,
+      "lng": -99.157701
+    },
+    {
+      "municipio": "Coyoacán",
+      "estado": "Ciudad de México",
+      "lat": 19.3498606,
+      "lng": -99.1619751
+    },
+    {
+      "municipio": "Cuajimalpa de Morelos",
+      "estado": "Ciudad de México",
+      "lat": 19.3572429,
+      "lng": -99.2996246
+    },
+    {
+      "municipio": "Cuauhtémoc",
+      "estado": "Ciudad de México",
+      "lat": 19.4326296,
+      "lng": -99.1331785
+    },
+    {
+      "municipio": "Gustavo A. Madero",
+      "estado": "Ciudad de México",
+      "lat": 19.4827949,
+      "lng": -99.1133606
+    },
+    {
+      "municipio": "Iztacalco",
+      "estado": "Ciudad de México",
+      "lat": 19.3957447,
+      "lng": -99.097453
+    },
+    {
+      "municipio": "Iztapalapa",
+      "estado": "Ciudad de México",
+      "lat": 19.3588629,
+      "lng": -99.0925404
+    },
+    {
+      "municipio": "La Magdalena Contreras",
+      "estado": "Ciudad de México",
+      "lat": 19.3047731,
+      "lng": -99.2413803
+    },
+    {
+      "municipio": "Miguel Hidalgo",
+      "estado": "Ciudad de México",
+      "lat": 19.4071156,
+      "lng": -99.1906167
+    },
+    {
+      "municipio": "Milpa Alta",
+      "estado": "Ciudad de México",
+      "lat": 19.1916095,
+      "lng": -99.0233759
+    },
+    {
+      "municipio": "Tlalpan",
+      "estado": "Ciudad de México",
+      "lat": 19.2880603,
+      "lng": -99.1669733
+    },
+    {
+      "municipio": "Tláhuac",
+      "estado": "Ciudad de México",
+      "lat": 19.2703914,
+      "lng": -99.0047499
+    },
+    {
+      "municipio": "Venustiano Carranza",
+      "estado": "Ciudad de México",
+      "lat": 19.4191658,
+      "lng": -99.1135482
+    },
+    {
+      "municipio": "Xochimilco",
+      "estado": "Ciudad de México",
+      "lat": 19.2633607,
+      "lng": -99.1047377
+    },
+    {
+      "municipio": "Álvaro Obregón",
+      "estado": "Ciudad de México",
+      "lat": 19.3906515,
+      "lng": -99.1952423
+    },
+    {
+      "municipio": "León",
+      "estado": "Guanajuato",
+      "lat": 21.121965,
+      "lng": -101.6829766
+    },
+    {
+      "municipio": "Cuernavaca",
+      "estado": "Morelos",
+      "lat": 18.9331321,
+      "lng": -99.2599579
+    },
+    {
+      "municipio": "Amecameca",
+      "estado": "México",
+      "lat": 19.1200254,
+      "lng": -98.7065318
+    },
+    {
+      "municipio": "Atizapán de Zaragoza",
+      "estado": "México",
+      "lat": 19.564017,
+      "lng": -99.2795356
+    },
+    {
+      "municipio": "Chalco",
+      "estado": "México",
+      "lat": 19.2382585,
+      "lng": -98.8188838
+    },
+    {
+      "municipio": "Chimalhuacán",
+      "estado": "México",
+      "lat": 19.4177511,
+      "lng": -98.9575169
+    },
+    {
+      "municipio": "Coacalco de Berriozábal",
+      "estado": "México",
+      "lat": 19.6359452,
+      "lng": -99.0948573
+    },
+    {
+      "municipio": "Cuautitlán",
+      "estado": "México",
+      "lat": 19.7055182,
+      "lng": -99.1666257
+    },
+    {
+      "municipio": "Cuautitlán Izcalli",
+      "estado": "México",
+      "lat": 19.6531356,
+      "lng": -99.2145002
+    },
+    {
+      "municipio": "Ecatepec de Morelos",
+      "estado": "México",
+      "lat": 19.5994083,
+      "lng": -99.0487281
+    },
+    {
+      "municipio": "Huehuetoca",
+      "estado": "México",
+      "lat": 19.8222076,
+      "lng": -99.2709164
+    },
+    {
+      "municipio": "Huixquilucan",
+      "estado": "México",
+      "lat": 19.3701838,
+      "lng": -99.3581568
+    },
+    {
+      "municipio": "Ixtapaluca",
+      "estado": "México",
+      "lat": 19.32929,
+      "lng": -98.8082745
+    },
+    {
+      "municipio": "La Paz",
+      "estado": "México",
+      "lat": 19.3637686,
+      "lng": -98.9463136
+    },
+    {
+      "municipio": "Lerma",
+      "estado": "México",
+      "lat": 19.3263632,
+      "lng": -99.460052
+    },
+    {
+      "municipio": "Malinalco",
+      "estado": "México",
+      "lat": 18.893826,
+      "lng": -99.4941623
+    },
+    {
+      "municipio": "Metepec",
+      "estado": "México",
+      "lat": 19.2511338,
+      "lng": -99.5937281
+    },
+    {
+      "municipio": "Naucalpan de Juárez",
+      "estado": "México",
+      "lat": 19.4788356,
+      "lng": -99.2327986
+    },
+    {
+      "municipio": "Nezahualcóyotl",
+      "estado": "México",
+      "lat": 19.4325047,
+      "lng": -99.0352121
+    },
+    {
+      "municipio": "Nicolás Romero",
+      "estado": "México",
+      "lat": 19.6342263,
+      "lng": -99.3695564
+    },
+    {
+      "municipio": "Ocuilan",
+      "estado": "México",
+      "lat": 19.0013312,
+      "lng": -99.3950158
+    },
+    {
+      "municipio": "San Mateo Atenco",
+      "estado": "México",
+      "lat": 19.2621168,
+      "lng": -99.537009
+    },
+    {
+      "municipio": "Tecámac",
+      "estado": "México",
+      "lat": 19.7115011,
+      "lng": -98.968354
+    },
+    {
+      "municipio": "Tenancingo",
+      "estado": "México",
+      "lat": 18.9646592,
+      "lng": -99.5689821
+    },
+    {
+      "municipio": "Tenango del Valle",
+      "estado": "México",
+      "lat": 19.0760032,
+      "lng": -99.6480906
+    },
+    {
+      "municipio": "Teoloyucan",
+      "estado": "México",
+      "lat": 19.7579739,
+      "lng": -99.173033
+    },
+    {
+      "municipio": "Teotihuacán",
+      "estado": "México",
+      "lat": 19.6933571,
+      "lng": -98.8831264
+    },
+    {
+      "municipio": "Tepotzotlán",
+      "estado": "México",
+      "lat": 19.7173392,
+      "lng": -99.2230683
+    },
+    {
+      "municipio": "Tianguistenco",
+      "estado": "México",
+      "lat": 19.1622428,
+      "lng": -99.4616998
+    },
+    {
+      "municipio": "Tlalnepantla de Baz",
+      "estado": "México",
+      "lat": 19.5464902,
+      "lng": -99.1899352
+    },
+    {
+      "municipio": "Toluca",
+      "estado": "México",
+      "lat": 19.292545,
+      "lng": -99.6569007
+    },
+    {
+      "municipio": "Tultepec",
+      "estado": "México",
+      "lat": 19.6781696,
+      "lng": -99.1279446
+    },
+    {
+      "municipio": "Tultitlán",
+      "estado": "México",
+      "lat": 19.6169912,
+      "lng": -99.1592775
+    },
+    {
+      "municipio": "Valle de Chalco Solidaridad",
+      "estado": "México",
+      "lat": 19.282153,
+      "lng": -98.9416122
+    },
+    {
+      "municipio": "Xonacatlán",
+      "estado": "México",
+      "lat": 19.4415502,
+      "lng": -99.4475019
+    },
+    {
+      "municipio": "Zumpango",
+      "estado": "México",
+      "lat": 19.8129368,
+      "lng": -99.0818095
+    },
+    {
+      "municipio": "Allende",
+      "estado": "Nuevo León",
+      "lat": 25.2988343,
+      "lng": -100.0452016
+    },
+    {
+      "municipio": "Apodaca",
+      "estado": "Nuevo León",
+      "lat": 25.7871006,
+      "lng": -100.1850769
+    },
+    {
+      "municipio": "Cadereyta Jiménez",
+      "estado": "Nuevo León",
+      "lat": 25.5876993,
+      "lng": -100.0012458
+    },
+    {
+      "municipio": "Ciénega de Flores",
+      "estado": "Nuevo León",
+      "lat": 25.9533262,
+      "lng": -100.1874241
+    },
+    {
+      "municipio": "El Carmen",
+      "estado": "Nuevo León",
+      "lat": 25.9161149,
+      "lng": -100.3584231
+    },
+    {
+      "municipio": "Galeana",
+      "estado": "Nuevo León",
+      "lat": 24.758306,
+      "lng": -100.3813513
+    },
+    {
+      "municipio": "García",
+      "estado": "Nuevo León",
+      "lat": 25.8054661,
+      "lng": -100.6396468
+    },
+    {
+      "municipio": "General Escobedo",
+      "estado": "Nuevo León",
+      "lat": 25.808517,
+      "lng": -100.3224334
+    },
+    {
+      "municipio": "General Zuazua",
+      "estado": "Nuevo León",
+      "lat": 25.8953873,
+      "lng": -100.1078021
+    },
+    {
+      "municipio": "Guadalupe",
+      "estado": "Nuevo León",
+      "lat": 25.6751114,
+      "lng": -100.2151753
+    },
+    {
+      "municipio": "Juárez",
+      "estado": "Nuevo León",
+      "lat": 25.6076075,
+      "lng": -100.1567941
+    },
+    {
+      "municipio": "Linares",
+      "estado": "Nuevo León",
+      "lat": 24.8530057,
+      "lng": -99.4103419
+    },
+    {
+      "municipio": "Montemorelos",
+      "estado": "Nuevo León",
+      "lat": 25.1886604,
+      "lng": -99.8293539
+    },
+    {
+      "municipio": "Monterrey",
+      "estado": "Nuevo León",
+      "lat": 25.6802019,
+      "lng": -100.315258
+    },
+    {
+      "municipio": "Pesquería",
+      "estado": "Nuevo León",
+      "lat": 25.7469488,
+      "lng": -100.0044684
+    },
+    {
+      "municipio": "Salinas Victoria",
+      "estado": "Nuevo León",
+      "lat": 26.1216805,
+      "lng": -100.3270877
+    },
+    {
+      "municipio": "San Nicolás de los Garza",
+      "estado": "Nuevo León",
+      "lat": 25.7558021,
+      "lng": -100.289648
+    },
+    {
+      "municipio": "San Pedro Garza García",
+      "estado": "Nuevo León",
+      "lat": 25.652395,
+      "lng": -100.3726067
+    },
+    {
+      "municipio": "Santa Catarina",
+      "estado": "Nuevo León",
+      "lat": 25.6745052,
+      "lng": -100.4616371
+    },
+    {
+      "municipio": "Santiago",
+      "estado": "Nuevo León",
+      "lat": 25.374378,
+      "lng": -100.2609439
+    },
+    {
+      "municipio": "Guadalajara",
+      "estado": "Jalisco",
+      "lat": 20.6720375,
+      "lng": -103.338396
+    },
+    {
+      "municipio": "Puerto Vallarta",
+      "estado": "Jalisco",
+      "lat": 20.6407176,
+      "lng": -105.220306
+    },
+    {
+      "municipio": "San Pedro Tlaquepaque",
+      "estado": "Jalisco",
+      "lat": 20.6397718,
+      "lng": -103.3120428
+    },
+    {
+      "municipio": "Tlajomulco de Zúñiga",
+      "estado": "Jalisco",
+      "lat": 20.4818737,
+      "lng": -103.4005097
+    },
+    {
+      "municipio": "Tonalá",
+      "estado": "Jalisco",
+      "lat": 20.6241367,
+      "lng": -103.2421263
+    },
+    {
+      "municipio": "Zapopan",
+      "estado": "Jalisco",
+      "lat": 20.7211203,
+      "lng": -103.3913671
+    },
+    {
+      "municipio": "Acatlán",
+      "estado": "Puebla",
+      "lat": 18.2231375,
+      "lng": -98.0768528
+    },
+    {
+      "municipio": "Amozoc",
+      "estado": "Puebla",
+      "lat": 19.0637658,
+      "lng": -98.0443494
+    },
+    {
+      "municipio": "Atlixco",
+      "estado": "Puebla",
+      "lat": 18.908889,
+      "lng": -98.437778
+    },
+    {
+      "municipio": "Chignahuapan",
+      "estado": "Puebla",
+      "lat": 19.8213915,
+      "lng": -98.1177571
+    },
+    {
+      "municipio": "Coronango",
+      "estado": "Puebla",
+      "lat": 19.1367048,
+      "lng": -98.2918774
+    },
+    {
+      "municipio": "Cuautempan",
+      "estado": "Puebla",
+      "lat": 19.9183337,
+      "lng": -97.7937906
+    },
+    {
+      "municipio": "Cuautlancingo",
+      "estado": "Puebla",
+      "lat": 19.119366,
+      "lng": -98.2491624
+    },
+    {
+      "municipio": "Huauchinango",
+      "estado": "Puebla",
+      "lat": 20.1782494,
+      "lng": -98.0490728
+    },
+    {
+      "municipio": "Huejotzingo",
+      "estado": "Puebla",
+      "lat": 19.1642771,
+      "lng": -98.4392754
+    },
+    {
+      "municipio": "Izúcar de Matamoros",
+      "estado": "Puebla",
+      "lat": 18.5065817,
+      "lng": -98.4230778
+    },
+    {
+      "municipio": "Juan C. Bonilla",
+      "estado": "Puebla",
+      "lat": 19.1215047,
+      "lng": -98.3474275
+    },
+    {
+      "municipio": "Ocoyucan",
+      "estado": "Puebla",
+      "lat": 18.9300722,
+      "lng": -98.3217272
+    },
+    {
+      "municipio": "Puebla",
+      "estado": "Puebla",
+      "lat": 19.0437975,
+      "lng": -98.1981513
+    },
+    {
+      "municipio": "San Andrés Cholula",
+      "estado": "Puebla",
+      "lat": 19.0220464,
+      "lng": -98.2872661
+    },
+    {
+      "municipio": "San Martín Texmelucan",
+      "estado": "Puebla",
+      "lat": 19.2659835,
+      "lng": -98.424878
+    },
+    {
+      "municipio": "San Pedro Cholula",
+      "estado": "Puebla",
+      "lat": 19.0724114,
+      "lng": -98.3223671
+    },
+    {
+      "municipio": "Tecamachalco",
+      "estado": "Puebla",
+      "lat": 18.8640574,
+      "lng": -97.7282334
+    },
+    {
+      "municipio": "Tehuacán",
+      "estado": "Puebla",
+      "lat": 18.4658011,
+      "lng": -97.3978348
+    },
+    {
+      "municipio": "Teziutlán",
+      "estado": "Puebla",
+      "lat": 19.8739926,
+      "lng": -97.3715629
+    },
+    {
+      "municipio": "Zacapoaxtla",
+      "estado": "Puebla",
+      "lat": 19.8407045,
+      "lng": -97.5792998
+    },
+    {
+      "municipio": "Zacatlán",
+      "estado": "Puebla",
+      "lat": 19.9605952,
+      "lng": -98.0057214
+    },
+    {
+      "municipio": "Amealco de Bonfil",
+      "estado": "Querétaro",
+      "lat": 20.1874446,
+      "lng": -100.0691552
+    },
+    {
+      "municipio": "Corregidora",
+      "estado": "Querétaro",
+      "lat": 20.4773709,
+      "lng": -100.4408668
+    },
+    {
+      "municipio": "El Marqués",
+      "estado": "Querétaro",
+      "lat": 20.7350779,
+      "lng": -100.2835765
+    },
+    {
+      "municipio": "Pinal de Amoles",
+      "estado": "Querétaro",
+      "lat": 21.1665053,
+      "lng": -99.6233214
+    },
+    {
+      "municipio": "Querétaro",
+      "estado": "Querétaro",
+      "lat": 20.5922997,
+      "lng": -100.3917424
+    },
+    {
+      "municipio": "Ensenada",
+      "estado": "Baja California",
+      "lat": 31.8658887,
+      "lng": -116.602983
+    },
+    {
+      "municipio": "Mexicali",
+      "estado": "Baja California",
+      "lat": 32.6642319,
+      "lng": -115.4950266
+    },
+    {
+      "municipio": "Playas de Rosarito",
+      "estado": "Baja California",
+      "lat": 32.365166,
+      "lng": -117.0557923
+    },
+    {
+      "municipio": "San Felipe",
+      "estado": "Baja California",
+      "lat": 31.0269529,
+      "lng": -114.839607
+    },
+    {
+      "municipio": "San Quintín",
+      "estado": "Baja California",
+      "lat": 30.5613719,
+      "lng": -115.938162
+    },
+    {
+      "municipio": "Tecate",
+      "estado": "Baja California",
+      "lat": 32.5653831,
+      "lng": -116.6298787
+    },
+    {
+      "municipio": "Tijuana",
+      "estado": "Baja California",
+      "lat": 32.5364775,
+      "lng": -117.0371232
+    }
+  ]
+}

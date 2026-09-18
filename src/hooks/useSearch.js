@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
 import { checkSignatureRadar } from '../lib/coverageRadius.js'
+import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { checkPIC } from '../utils/api.js'
 import { effectiveRentForPlan, actualFeeForPlan } from '../data/protectionPlans.js'
 
@@ -203,8 +204,11 @@ export function useSearch() {
       //    absent CP means no coverage, full stop. No municipio or CP-prefix
       //    fallback: a covered neighbor CP must never resurrect coverage for a
       //    CP that was explicitly removed from the sheet.
+      const distanceToCoverageKm = distanceToNearestCoverage({ lat, lng })
       setResult({
         hasCoverage: false,
+        nearCoverage: distanceToCoverageKm != null && distanceToCoverageKm <= 10,
+        distanceToCoverageKm,
         firmaFisicaRadar: await resolveRadar(lat, lng),
         cp,
         municipio: geocodedMunicipio,

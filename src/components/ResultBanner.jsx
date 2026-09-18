@@ -3,7 +3,7 @@ import { PROTECTION_PLANS } from '../data/protectionPlans.js'
 export default function ResultBanner({ result }) {
   if (!result) return null
 
-  const { hasCoverage, firmaFisicaRadar, cp, municipio, estado, error } = result
+  const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error } = result
 
   const TIER_LABELS = { 0: 'Garantizada (≤6 km)', 1: 'Estándar (6-15 km)', 2: 'Excepcional (15-25 km)' }
   const planLabel = firmaFisicaRadar?.planId
@@ -59,13 +59,17 @@ export default function ResultBanner({ result }) {
           {municipio ? ` · ${municipio}, ${estado}` : null}
         </p>
 
-        {/* Bullet 1: Cobertura de Protección MoradaUno (el resto de servicios — Investigación, Firma de contratos — se ofrecen en todo el país) */}
+        {/* Bullet 1: Cobertura de Protección MoradaUno — nunca un "no" rotundo: si no hay cobertura, se ofrece
+            lo que sí está disponible en todo el país (Investigación, Firma de contratos), matizado por qué
+            tan lejos está la zona de cobertura más cercana. */}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
           <span style={{ fontSize: '15px' }}>{hasCoverage ? '●' : '○'}</span>
           <p style={{ fontSize: '15px', fontWeight: '700', color: hasCoverage ? 'var(--mu-success)' : 'var(--mu-purple-dark)', fontFamily: 'var(--mu-font-ui)' }}>
             {hasCoverage
-              ? <>En {location} podemos ofrecer <b>Protección MoradaUno</b> y Servicios de Investigación y Firma de contratos</>
-              : <>En {location} podemos ofrecer Servicios de Investigación y de Firma de contratos. Estamos trabajando para expandirnos en esta zona para proteger tu inmueble</>}
+              ? <>En {location} están disponibles todas las Protecciones de MoradaUno, Servicios de Investigación y Firma de contratos</>
+              : nearCoverage
+                ? <>En {location} podemos ofrecer únicamente Servicios de investigación y Firma de contratos electrónico</>
+                : <>Seguimos trabajando juntos para ofrecerte nuestros productos y servicios. Para más información, consulta con tu agente MoradaUno.</>}
           </p>
         </div>
 
@@ -81,8 +85,8 @@ export default function ResultBanner({ result }) {
             <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered ? '#0284C7' : '#D97706', fontFamily: 'var(--mu-font-ui)' }}>
               Cobertura de firma física:{' '}
               {firmaFisicaRadar.covered
-                ? <>En {location} hay servicio de firma física <b>sin costo adicional</b></>
-                : <>En {location} hay servicio de firma física por un monto de <b>${firmaFisicaRadar.estimatedFare.toLocaleString('es-MX')}</b> adicional, consúltalo con tu agente de confianza para contratar</>}
+                ? <>En {location} ofrecemos servicio de firma física <b>sin costo adicional</b></>
+                : <>En {location} ofrecemos servicio de firma física por un monto adicional de <b>${firmaFisicaRadar.estimatedFare.toLocaleString('es-MX')}</b>, consulta con tu agente de MoradaUno para contratar</>}
             </p>
           </div>
         )}

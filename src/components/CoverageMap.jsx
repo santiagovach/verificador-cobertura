@@ -126,35 +126,6 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
     return () => markers.forEach(m => m.setMap(null))
   }, [map])
 
-  // Círculos de radar (6/15/25km) alrededor del punto de firma más cercano al
-  // resultado buscado — solo se muestran cuando la búsqueda trae firmaFisicaRadar
-  // (requiere haber capturado un Deal ID).
-  const radarCirclesRef = useRef([])
-
-  useEffect(() => {
-    const g = window.google?.maps
-    radarCirclesRef.current.forEach(c => c.setMap(null))
-    radarCirclesRef.current = []
-
-    if (!map || !g) return
-    const radar = searchResult?.firmaFisicaRadar
-    if (!radar || radar.pending || radar.error) return
-
-    const point = SIGNATURE_POINTS.find(p => p.id === radar.nearestPoint?.id)
-    if (!point) return
-
-    radarCirclesRef.current = RADAR_TIERS_KM.map(({ radiusKm, color }) => new g.Circle({
-      map,
-      center: { lat: point.lat, lng: point.lng },
-      radius: radiusKm * 1000,
-      fillOpacity: 0,
-      strokeColor: color,
-      strokeWeight: 1.5,
-      strokeOpacity: 0.7,
-      clickable: false,
-    }))
-  }, [map, searchResult])
-
   // Pin marker for the searched CP/address
   const markerRef = useRef(null)
 
@@ -200,6 +171,46 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
     return () => {
       marker.setMap(null)
     }
+  }, [map, searchResult])
+
+  // Círculos de radar (6/15/25km) alrededor del punto de firma más cercano al
+  // resultado buscado. Corre DESPUÉS del efecto del pin (arriba) a propósito:
+  // ese efecto fija zoom=14, que deja el anillo de 25km fuera de cuadro —
+  // aquí se sobreescribe con fitBounds para que el anillo completo sea visible.
+  const radarCirclesRef = useRef([])
+
+  useEffect(() => {
+    const g = window.google?.maps
+    radarCirclesRef.current.forEach(c => c.setMap(null))
+    radarCirclesRef.current = []
+
+    if (!map || !g) return
+    const radar = searchResult?.firmaFisicaRadar
+    if (!radar || radar.error) return
+
+    const point = SIGNATURE_POINTS.find(p => p.id === radar.nearestPoint?.id)
+    if (!point) return
+
+    const circles = RADAR_TIERS_KM.map(({ radiusKm, color }) => new g.Circle({
+      map,
+      center: { lat: point.lat, lng: point.lng },
+      radius: radiusKm * 1000,
+      fillColor: color,
+      fillOpacity: 0.08,
+      strokeColor: color,
+      strokeWeight: 3,
+      strokeOpacity: 0.9,
+      clickable: false,
+      zIndex: 4,
+    }))
+    radarCirclesRef.current = circles
+
+    const outer = circles[circles.length - 1]
+    const bounds = outer.getBounds()
+    if (searchResult.lat != null && searchResult.lng != null) {
+      bounds.extend({ lat: searchResult.lat, lng: searchResult.lng })
+    }
+    map.fitBounds(bounds, 40)
   }, [map, searchResult])
 
   // Zoom to searched municipality (only when no exact coordinates — pin centering takes priority)
