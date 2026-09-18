@@ -9,6 +9,7 @@ export default function ResultBanner({ result }) {
   const planLabel = firmaFisicaRadar?.planId
     ? PROTECTION_PLANS.find(p => p.id === firmaFisicaRadar.planId)?.label
     : null
+  const location = municipio || estado || 'esta zona'
 
   if (error) {
     return (
@@ -58,48 +59,41 @@ export default function ResultBanner({ result }) {
           {municipio ? ` · ${municipio}, ${estado}` : null}
         </p>
 
-        {/* Bullet 1: Cobertura de protección */}
+        {/* Bullet 1: Cobertura de Protección MoradaUno (el resto de servicios — Investigación, Firma de contratos — se ofrecen en todo el país) */}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
           <span style={{ fontSize: '15px' }}>{hasCoverage ? '●' : '○'}</span>
           <p style={{ fontSize: '15px', fontWeight: '700', color: hasCoverage ? 'var(--mu-success)' : 'var(--mu-purple-dark)', fontFamily: 'var(--mu-font-ui)' }}>
             {hasCoverage
-              ? `¡Tenemos cobertura en ${municipio || estado}!`
-              : 'Por ahora no tenemos cobertura en esta zona.'}
+              ? <>En {location} podemos ofrecer <b>Protección MoradaUno</b> y Servicios de Investigación y Firma de contratos</>
+              : <>En {location} podemos ofrecer Servicios de Investigación y de Firma de contratos. Estamos trabajando para expandirnos en esta zona para proteger tu inmueble</>}
           </p>
         </div>
 
-        {/* Radar de firma física por punto (solo si se llenó renta/asesor/inmobiliaria) */}
+        {/* Bullet 2: Cobertura de firma física — siempre se muestra (gratis dentro de la capa, o con tarifa aproximada fuera de ella) */}
         {firmaFisicaRadar?.error && (
           <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
-            ⚠️ No se pudo calcular el radar: {firmaFisicaRadar.error}
+            ⚠️ No se pudo calcular la cobertura de firma física: {firmaFisicaRadar.error}
           </p>
         )}
         {firmaFisicaRadar && !firmaFisicaRadar.error && (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '6px' }}>
-            <span style={{ fontSize: '15px', color: firmaFisicaRadar.covered ? '#0284C7' : 'var(--mu-text-muted)' }}>●</span>
-            <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered ? '#0284C7' : 'var(--mu-text-muted)', fontFamily: 'var(--mu-font-ui)' }}>
-              Radar de firma:{' '}
-              <span style={{ fontWeight: '700' }}>
-                {firmaFisicaRadar.covered ? 'Cubierto' : 'Fuera de alcance'}
-              </span>
-              {' — '}
-              {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
-              {firmaFisicaRadar.tier != null && ` (capa ${TIER_LABELS[firmaFisicaRadar.tier]})`}
-              {firmaFisicaRadar.isPIC && ' · propietario/inmobiliaria PIC'}
+            <span style={{ fontSize: '15px', color: firmaFisicaRadar.covered ? '#0284C7' : '#D97706' }}>●</span>
+            <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered ? '#0284C7' : '#D97706', fontFamily: 'var(--mu-font-ui)' }}>
+              Cobertura de firma física:{' '}
+              {firmaFisicaRadar.covered
+                ? <>En {location} hay servicio de firma física <b>sin costo adicional</b></>
+                : <>En {location} hay servicio de firma física por un monto de <b>${firmaFisicaRadar.estimatedFare.toLocaleString('es-MX')}</b> adicional, consúltalo con tu agente de confianza para contratar</>}
             </p>
           </div>
         )}
-        {firmaFisicaRadar?.rentAmountRaw != null && (
+        {firmaFisicaRadar && !firmaFisicaRadar.error && (
           <p style={{ fontSize: '12px', color: 'var(--mu-text-muted)', marginTop: '2px', marginLeft: '23px' }}>
-            Renta ${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')}
+            {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
+            {firmaFisicaRadar.tier != null && ` · capa ${TIER_LABELS[firmaFisicaRadar.tier]}`}
+            {firmaFisicaRadar.isPIC && ' · PIC'}
+            {firmaFisicaRadar.rentAmountRaw != null && ` · renta $${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')}`}
             {planLabel && ` · plan ${planLabel}`}
             {firmaFisicaRadar.revenue != null && ` · revenue $${Math.round(firmaFisicaRadar.revenue).toLocaleString('es-MX')}`}
-          </p>
-        )}
-
-        {!hasCoverage && (
-          <p style={{ fontSize: '13px', color: 'var(--mu-text-muted)', marginTop: '8px', fontStyle: 'italic' }}>
-            Estamos creciendo constantemente — pronto podríamos llegar a tu zona.
           </p>
         )}
       </div>

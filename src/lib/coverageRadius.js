@@ -1,4 +1,5 @@
 import signaturePointsData from '../data/signaturePoints.json'
+import { estimateUberFareRoundTrip } from './uberFareEstimate.js'
 
 const EARTH_RADIUS_KM = 6371
 
@@ -61,5 +62,8 @@ export function checkSignatureRadar(latlng, economics = {}) {
     nearestPoint: { id: nearest.point.id, nombre: nearest.point.nombre, tipo: nearest.point.tipo },
     effectiveRent: economics.rentAmount ?? null,
     isPIC: economics.isPIC ?? false,
+    // Firma física ya no es "no disponible" fuera de la capa gratuita —
+    // se ofrece por una tarifa estimada (aprox. Uber, ida y vuelta).
+    estimatedFare: covered ? null : estimateUberFareRoundTrip(distanceKm),
   }
 }

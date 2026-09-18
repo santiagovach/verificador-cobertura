@@ -137,16 +137,16 @@ export function useSearch() {
         geocodedEstado = geo.estado
       }
 
-      // Radar de firma física por puntos (abogados/oficinas) ponderado por
-      // renta/PIC — pensado para usarse ANTES de que exista un deal (Sales/CS
-      // decide si vale la pena avanzar). Si no se llenó ningún campo opcional
-      // (renta, asesor/propietario, inmobiliaria), no se calcula nada y la
-      // búsqueda se comporta igual que antes (respuesta estándar por CP).
+      // Radar de firma física por puntos (abogados/oficinas) — pensado para
+      // usarse ANTES de que exista un deal (Sales/CS decide si vale la pena
+      // avanzar). SIEMPRE se calcula (distancia + capa) en cuanto hay
+      // coordenadas; renta/PIC/plan son opcionales y solo afinan el
+      // resultado — sin ellos, se evalúa con el peor caso (renta $0, sin
+      // PIC), que es exactamente lo que se necesita para decidir gratis vs.
+      // tarifa. Ver src/lib/uberFareEstimate.js.
       const resolveRadar = async (searchLat, searchLng, plaza) => {
+        if (searchLat == null || searchLng == null) return null
         const hasRentAmount = rentAmount != null && rentAmount !== '' && !Number.isNaN(rentAmount)
-        const hasParty = Boolean(party)
-        const hasAgency = Boolean(agency)
-        if ((!hasRentAmount && !hasParty && !hasAgency) || searchLat == null || searchLng == null) return null
 
         let isPIC = false
         try {
