@@ -13,3 +13,5 @@ src/data/coverage.json
 
 # Archivo INEGI local (grande, no va en repo)
 data/municipios-mexico.geojson
+.vercel
+.env*
