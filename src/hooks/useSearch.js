@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
 import { checkSignatureRadar } from '../lib/coverageRadius.js'
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
+import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
 import { effectiveRentForPlan, actualFeeForPlan } from '../data/protectionPlans.js'
 
@@ -90,6 +91,9 @@ async function geocode(query, isCP = false) {
     return {
       cp: get('postal_code'),
       municipio: get('locality', 'administrative_area_level_2', 'sublocality_level_1'),
+      // Municipio político — mejor etiqueta que 'locality' (que puede ser una
+      // colonia o poblado) cuando Google lo devuelve.
+      adminMunicipio: get('administrative_area_level_2'),
       estado: get('administrative_area_level_1'),
       lat: loc?.lat() ?? null,
       lng: loc?.lng() ?? null,
@@ -115,6 +119,7 @@ export function useSearch() {
       let lng = null
       let geocodedMunicipio = null
       let geocodedEstado = null
+      let geocodedAdminMunicipio = null
 
       if (CP_REGEX.test(query.trim())) {
         cp = query.trim()
@@ -123,6 +128,7 @@ export function useSearch() {
           lat = geo.lat
           lng = geo.lng
           geocodedMunicipio = geo.municipio
+          geocodedAdminMunicipio = geo.adminMunicipio
           geocodedEstado = geo.estado
         }
       } else {
@@ -135,6 +141,7 @@ export function useSearch() {
         lat = geo.lat
         lng = geo.lng
         geocodedMunicipio = geo.municipio
+        geocodedAdminMunicipio = geo.adminMunicipio
         geocodedEstado = geo.estado
       }
 
@@ -182,7 +189,17 @@ export function useSearch() {
       }
 
       // 1. Exact CP match
-      const exactEntry = coverageData.byCp[cp]
+      //    El Sheet asigna rangos de CP en bloque a un municipio (62520 aparece
+      //    como Cuernavaca aunque es Tepoztlán): si el punto geocodificado cae
+      //    fuera del polígono de ese municipio, el renglón está mal → sin
+      //    cobertura. Sin polígono/coordenadas se confía en el Sheet.
+      const sheetEntry = coverageData.byCp[cp]
+      const exactEntry = sheetEntry && (
+        normalizeState(sheetEntry.estado) === 'ciudad de mexico' ||
+        (await pointInMunicipality(sheetEntry, { lat, lng })) !== false
+      )
+        ? sheetEntry
+        : null
       if (exactEntry) {
         if (!lat && !lng) {
           const fallback = await geocode(`${exactEntry.municipio}, ${exactEntry.estado}, México`)
@@ -211,7 +228,7 @@ export function useSearch() {
         distanceToCoverageKm,
         firmaFisicaRadar: await resolveRadar(lat, lng),
         cp,
-        municipio: geocodedMunicipio,
+        municipio: geocodedAdminMunicipio || geocodedMunicipio,
         estado: geocodedEstado,
         lat,
         lng,
