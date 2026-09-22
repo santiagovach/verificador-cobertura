@@ -75,7 +75,7 @@ export default function ResultBanner({ result }) {
 
         {/* Bullet 2: Cobertura de firma física — siempre se muestra. La tarifa aproximada fuera de capa
             (estimatedFare) se sigue calculando pero está OCULTA: no es seguro que se vaya a cobrar, así que
-            fuera de capa se muestra el mismo mensaje de "sin cobertura" del bullet 1. */}
+            fuera de capa se ofrece firma electrónica en su lugar. */}
         {firmaFisicaRadar?.error && (
           <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
             ⚠️ No se pudo calcular la cobertura de firma física: {firmaFisicaRadar.error}
@@ -88,7 +88,7 @@ export default function ResultBanner({ result }) {
               Cobertura de firma física:{' '}
               {firmaFisicaRadar.covered
                 ? <>En {location} ofrecemos servicio de firma física <b>sin costo adicional</b></>
-                : <>Seguimos trabajando juntos para ofrecerte nuestros productos y servicios. Para más información, consulta con tu agente MoradaUno.</>}
+                : <>Por el momento podemos ofrecer firma electrónica. Para más información, consulta con tu agente MoradaUno</>}
             </p>
           </div>
         )}
