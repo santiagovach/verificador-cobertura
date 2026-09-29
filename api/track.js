@@ -64,7 +64,7 @@ export default async function handler(req, res) {
   if (!hubUrl || !ingestKey) return res.status(200).json({ ok: true, skipped: true })
 
   try {
-    await fetch(`${hubUrl}/api/events`, {
+    const hubRes = await fetch(`${hubUrl}/api/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ingestKey}` },
       body: JSON.stringify({
@@ -76,6 +76,9 @@ export default async function handler(req, res) {
       }),
       signal: AbortSignal.timeout(3000),
     })
+    // fetch no truena con 4xx/5xx — sin esto, un ADOPTION_HUB_INGEST_KEY equivocado (401 del
+    // hub) se perdía en silencio.
+    if (!hubRes.ok) console.error(`[adoptionhub] hub respondió ${hubRes.status}`)
   } catch (err) {
     console.error('[adoptionhub] track failed', err)
   }
