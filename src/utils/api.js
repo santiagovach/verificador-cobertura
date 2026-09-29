@@ -46,3 +46,16 @@ export async function checkPIC(accessToken, { landlordId, brokerId, organization
 
   return authorizedFetch(`${API_BASE}/api/check-pic?${params.toString()}`, {}, accessToken)
 }
+
+// Uso para AdoptionHUB (dashboard interno de adopción). Fire-and-forget a propósito y SIN
+// authorizedFetch: un 401 aquí (token vencido) no debe disparar el re-login, y si el tracking
+// falla la app sigue igual.
+export function trackUsage(accessToken, event) {
+  if (!accessToken) return
+  fetch(`${API_BASE}/api/track`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(event),
+    keepalive: true,
+  }).catch(() => {})
+}

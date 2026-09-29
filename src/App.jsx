@@ -22,6 +22,7 @@ import CoverageMap from './components/CoverageMap.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useSearch } from './hooks/useSearch.js'
+import { trackUsage } from './utils/api.js'
 
 function LoginPrompt({ onSignIn, sessionExpired }) {
   return (
@@ -134,6 +135,15 @@ export default function App() {
     return () => window.removeEventListener('mu:session-expired', handleSessionExpired)
   }, [signOut])
 
+  // AdoptionHUB: un pageview por carga de la app con sesión (el login ya manda su propio
+  // evento). Es una SPA de una sola vista, así que cada búsqueda también se registra como
+  // acción — sin eso casi todas las sesiones tendrían un solo evento y el hub no podría
+  // estimar su duración.
+  const accessToken = user?.accessToken
+  useEffect(() => {
+    trackUsage(accessToken, { event_type: 'pageview', path: '/' })
+  }, [accessToken])
+
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -156,7 +166,10 @@ export default function App() {
             }}
           >
             <SearchBar
-              onSearch={(query, opts) => search(query, { ...opts, accessToken: user.accessToken })}
+              onSearch={(query, opts) => {
+                trackUsage(user.accessToken, { event_type: 'action', action_name: 'search', path: '/' })
+                return search(query, { ...opts, accessToken: user.accessToken })
+              }}
               onClear={clear}
               isLoading={isLoading}
               accessToken={user.accessToken}

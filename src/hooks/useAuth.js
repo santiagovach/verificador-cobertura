@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useGoogleLogin } from '@react-oauth/google'
+import { trackUsage } from '../utils/api.js'
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')
@@ -42,6 +43,7 @@ export function useAuth() {
 
         localStorage.setItem('mu_user', JSON.stringify(userData))
         setUser(userData)
+        trackUsage(userData.accessToken, { event_type: 'login' })
       } catch {
         alert('Error al obtener la información de tu cuenta. Intenta de nuevo.')
       }
