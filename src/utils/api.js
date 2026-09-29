@@ -49,13 +49,34 @@ export async function checkPIC(accessToken, { landlordId, brokerId, organization
 
 // Uso para AdoptionHUB (dashboard interno de adopción). Fire-and-forget a propósito y SIN
 // authorizedFetch: un 401 aquí (token vencido) no debe disparar el re-login, y si el tracking
-// falla la app sigue igual.
+// falla la app sigue igual. Manda también el trackToken firmado que devuelve /api/track, para
+// que el uso se siga contando cuando el token de Google (~1h) ya venció.
+const TRACK_TOKEN_KEY = 'mu_track_token'
+
+function readTrackToken() {
+  try { return localStorage.getItem(TRACK_TOKEN_KEY) } catch { return null }
+}
+
+export function clearTrackToken() {
+  try { localStorage.removeItem(TRACK_TOKEN_KEY) } catch { /* sin storage, nada que borrar */ }
+}
+
 export function trackUsage(accessToken, event) {
-  if (!accessToken) return
+  const trackToken = readTrackToken()
+  if (!accessToken && !trackToken) return
   fetch(`${API_BASE}/api/track`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+      ...(trackToken && { 'X-Track-Token': trackToken }),
+    },
     body: JSON.stringify(event),
     keepalive: true,
-  }).catch(() => {})
+  })
+    .then(res => (res.ok ? res.json() : null))
+    .then(data => {
+      if (data?.trackToken) localStorage.setItem(TRACK_TOKEN_KEY, data.trackToken)
+    })
+    .catch(() => {})
 }

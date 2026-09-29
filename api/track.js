@@ -10,39 +10,59 @@
  * y un fetch pendiente se perdería. El timeout corto evita que un hub caído la alargue, y el
  * cliente de todos modos no espera esta respuesta.
  *
- * Auth: Bearer <google_access_token>, cualquier cuenta @moradauno.com.
+ * Auth: Bearer <google_access_token>, cualquier cuenta @moradauno.com — o, si ese token ya
+ * venció, el header X-Track-Token. El token de Google dura ~1h y la app no lo refresca, pero
+ * la búsqueda de cobertura no lo necesita: la gente sigue usando la app horas/días con un token
+ * muerto y ese uso se perdía. Por eso, cada vez que llega un token de Google válido se responde
+ * con un trackToken firmado (HMAC con un secreto de servidor, 90 días) que solo sirve para esto:
+ * identifica al usuario ya verificado sin volver a pedir login, y no se puede falsificar.
  */
+
+import crypto from 'node:crypto'
 
 const TOOL_ID = 'verificador-cobertura'
 const VALID_EVENT_TYPES = new Set(['login', 'pageview', 'action'])
 const VALID_ACTIONS = new Set(['search'])
 
+const TRACK_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000
+
+function signTrackToken(secret, email, exp) {
+  const payload = Buffer.from(JSON.stringify({ email, exp })).toString('base64url')
+  const sig = crypto.createHmac('sha256', secret).update(`track:${payload}`).digest('base64url')
+  return `${payload}.${sig}`
+}
+
+function verifyTrackToken(secret, token) {
+  if (typeof token !== 'string' || !token.includes('.')) return null
+  const [payload, sig] = token.split('.')
+  const expected = crypto.createHmac('sha256', secret).update(`track:${payload}`).digest('base64url')
+  const a = Buffer.from(sig)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null
+  try {
+    const { email, exp } = JSON.parse(Buffer.from(payload, 'base64url').toString())
+    if (typeof email !== 'string' || !email.endsWith('@moradauno.com') || !(exp > Date.now())) return null
+    return email
+  } catch {
+    return null
+  }
+}
+
+async function googleEmail(req) {
+  const authHeader = req.headers['authorization']
+  if (!authHeader?.startsWith('Bearer ')) return null
+  const tokenRes = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${authHeader.slice(7)}`)
+  const tokenInfo = await tokenRes.json()
+  if (!tokenRes.ok || tokenInfo.error || !tokenInfo.email?.endsWith('@moradauno.com')) return null
+  return tokenInfo.email
+}
+
 function setCors(req, res) {
   const allowed = process.env.ALLOWED_ORIGIN || '*'
   res.setHeader('Access-Control-Allow-Origin', allowed)
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Track-Token')
   res.setHeader('Vary', 'Origin')
-}
-
-async function requireMoradaunoUser(req, res) {
-  const authHeader = req.headers['authorization']
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'No autorizado — falta token' })
-    return null
-  }
-  const accessToken = authHeader.slice(7)
-  const tokenRes = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`)
-  const tokenInfo = await tokenRes.json()
-  if (!tokenRes.ok || tokenInfo.error || !tokenInfo.email) {
-    res.status(401).json({ error: 'Sesión inválida o expirada. Vuelve a iniciar sesión.' })
-    return null
-  }
-  if (!tokenInfo.email.endsWith('@moradauno.com')) {
-    res.status(403).json({ error: 'Solo se permiten cuentas @moradauno.com' })
-    return null
-  }
-  return tokenInfo.email
 }
 
 export default async function handler(req, res) {
@@ -50,18 +70,22 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' })
 
-  const email = await requireMoradaunoUser(req, res)
-  if (!email) return
+  const hubUrl = process.env.ADOPTION_HUB_URL
+  const ingestKey = process.env.ADOPTION_HUB_INGEST_KEY
+  if (!hubUrl || !ingestKey) return res.status(200).json({ ok: true, skipped: true })
+
+  // El mismo ingestKey (solo vive en el servidor) firma el trackToken; el prefijo "track:" en
+  // el HMAC lo separa de su uso como Bearer hacia el hub.
+  const verifiedEmail = await googleEmail(req)
+  const email = verifiedEmail || verifyTrackToken(ingestKey, req.headers['x-track-token'])
+  if (!email) return res.status(401).json({ error: 'Sesión inválida o expirada.' })
+  const trackToken = verifiedEmail ? signTrackToken(ingestKey, verifiedEmail, Date.now() + TRACK_TOKEN_TTL_MS) : undefined
 
   const { event_type, path, action_name } = req.body || {}
   if (!VALID_EVENT_TYPES.has(event_type)) return res.status(400).json({ error: 'event_type inválido' })
   if (event_type === 'action' && !VALID_ACTIONS.has(action_name)) {
     return res.status(400).json({ error: 'action_name inválido' })
   }
-
-  const hubUrl = process.env.ADOPTION_HUB_URL
-  const ingestKey = process.env.ADOPTION_HUB_INGEST_KEY
-  if (!hubUrl || !ingestKey) return res.status(200).json({ ok: true, skipped: true })
 
   try {
     const hubRes = await fetch(`${hubUrl}/api/events`, {
@@ -83,5 +107,5 @@ export default async function handler(req, res) {
     console.error('[adoptionhub] track failed', err)
   }
 
-  return res.status(200).json({ ok: true })
+  return res.status(200).json({ ok: true, trackToken })
 }

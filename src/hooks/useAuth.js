@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useGoogleLogin } from '@react-oauth/google'
-import { trackUsage } from '../utils/api.js'
+import { trackUsage, clearTrackToken } from '../utils/api.js'
 
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')
@@ -51,8 +51,11 @@ export function useAuth() {
     onError: () => alert('No se pudo completar el inicio de sesión. Intenta de nuevo.'),
   })
 
-  const signOut = useCallback(() => {
+  // Solo el logout explícito borra el trackToken; el de sesión expirada (mu:session-expired en
+  // App.jsx) lo conserva a propósito para seguir contando el uso hasta el siguiente login.
+  const signOut = useCallback(({ keepTracking = false } = {}) => {
     localStorage.removeItem('mu_user')
+    if (!keepTracking) clearTrackToken()
     setUser(null)
   }, [])
 

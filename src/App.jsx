@@ -129,7 +129,7 @@ export default function App() {
   useEffect(() => {
     function handleSessionExpired() {
       setSessionExpired(true)
-      signOut()
+      signOut({ keepTracking: true })
     }
     window.addEventListener('mu:session-expired', handleSessionExpired)
     return () => window.removeEventListener('mu:session-expired', handleSessionExpired)
