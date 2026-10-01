@@ -193,7 +193,13 @@ export function useSearch() {
       //    como Cuernavaca aunque es Tepoztlán): si el punto geocodificado cae
       //    fuera del polígono de ese municipio, el renglón está mal → sin
       //    cobertura. Sin polígono/coordenadas se confía en el Sheet.
-      const sheetEntry = coverageData.byCp[cp]
+      //    CDMX viene en el Sheet por bloques de 10 CPs (04360 cubre 04360–04369:
+      //    1,450 de 1,453 renglones terminan en 0), así que ahí un CP sin renglón
+      //    propio hereda el de su bloque. Solo CDMX — en los demás estados el
+      //    Sheet mezcla CPs exactos y bloques.
+      const blockEntry = cp && coverageData.byCp[`${cp.slice(0, 4)}0`]
+      const sheetEntry = coverageData.byCp[cp] ||
+        (blockEntry && normalizeState(blockEntry.estado) === 'ciudad de mexico' ? blockEntry : null)
       const exactEntry = sheetEntry && (
         normalizeState(sheetEntry.estado) === 'ciudad de mexico' ||
         (await pointInMunicipality(sheetEntry, { lat, lng })) !== false
