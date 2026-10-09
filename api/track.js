@@ -1,5 +1,6 @@
 /**
  * POST /api/track  { event_type: 'login' | 'pageview' | 'action', path?, action_name? }
+ *                  o { path, kind: 'click', label } (click de botón -> action 'click')
  *
  * Relay de eventos de uso a AdoptionHUB (moradauno-adoption-hub), el dashboard interno que
  * junta login/pageview de las herramientas de MoradaUno para managers. El email SIEMPRE sale
@@ -81,10 +82,22 @@ export default async function handler(req, res) {
   if (!email) return res.status(401).json({ error: 'Sesión inválida o expirada.' })
   const trackToken = verifiedEmail ? signTrackToken(ingestKey, verifiedEmail, Date.now() + TRACK_TOKEN_TTL_MS) : undefined
 
-  const { event_type, path, action_name } = req.body || {}
-  if (!VALID_EVENT_TYPES.has(event_type)) return res.status(400).json({ error: 'event_type inválido' })
-  if (event_type === 'action' && !VALID_ACTIONS.has(action_name)) {
-    return res.status(400).json({ error: 'action_name inválido' })
+  const body = req.body || {}
+  const { path } = body
+  let { event_type, action_name } = body
+  let metadata
+  // Clicks de botones: { path, kind: 'click', label } -> evento 'action' con el label en metadata.
+  if (body.kind === 'click') {
+    const label = typeof body.label === 'string' ? body.label.trim() : ''
+    if (!label || label.length > 80) return res.status(400).json({ error: 'label inválido' })
+    event_type = 'action'
+    action_name = 'click'
+    metadata = { label }
+  } else {
+    if (!VALID_EVENT_TYPES.has(event_type)) return res.status(400).json({ error: 'event_type inválido' })
+    if (event_type === 'action' && !VALID_ACTIONS.has(action_name)) {
+      return res.status(400).json({ error: 'action_name inválido' })
+    }
   }
 
   try {
@@ -97,6 +110,7 @@ export default async function handler(req, res) {
         user_email: email,
         path: typeof path === 'string' ? path.slice(0, 200) : null,
         action_name: event_type === 'action' ? action_name : null,
+        ...(metadata && { metadata }),
       }),
       signal: AbortSignal.timeout(3000),
     })

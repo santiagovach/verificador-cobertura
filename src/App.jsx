@@ -1,4 +1,4 @@
-import { useState, useEffect, Component } from 'react'
+import { useState, useEffect, useRef, Component } from 'react'
 
 class MapErrorBoundary extends Component {
   state = { error: null }
@@ -23,6 +23,25 @@ import AdminPanel from './components/AdminPanel.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useSearch } from './hooks/useSearch.js'
 import { trackUsage } from './utils/api.js'
+
+const CLICK_SELECTOR = 'button, a, [role="button"], [role="tab"], [role="menuitem"], [data-track]'
+
+// Label del click: data-track > aria-label > title > texto visible, sin emails ni números largos.
+function clickLabel(el) {
+  const raw =
+    el.getAttribute('data-track') ||
+    el.getAttribute('aria-label') ||
+    el.getAttribute('title') ||
+    el.innerText ||
+    ''
+  return raw
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '[email]')
+    .replace(/\d{3,}/g, '#')
+    .slice(0, 60)
+    .trim()
+}
 
 function LoginPrompt({ onSignIn, sessionExpired }) {
   return (
@@ -143,6 +162,27 @@ export default function App() {
   useEffect(() => {
     trackUsage(accessToken, { event_type: 'pageview', path: '/' })
   }, [accessToken])
+
+  // Clicks en botones/links (listener global, una sola vez) con el token más reciente.
+  const accessTokenRef = useRef(accessToken)
+  accessTokenRef.current = accessToken
+  useEffect(() => {
+    let lastLabel = ''
+    let lastAt = 0
+    function handleClick(e) {
+      const el = e.target?.closest?.(CLICK_SELECTOR)
+      if (!el) return
+      const label = clickLabel(el)
+      if (!label) return
+      const now = Date.now()
+      if (label === lastLabel && now - lastAt < 1000) return
+      lastLabel = label
+      lastAt = now
+      trackUsage(accessTokenRef.current, { path: window.location.pathname, kind: 'click', label })
+    }
+    document.addEventListener('click', handleClick, true)
+    return () => document.removeEventListener('click', handleClick, true)
+  }, [])
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
