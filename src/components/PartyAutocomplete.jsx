@@ -139,6 +139,7 @@ export default function PartyAutocomplete({ label, placeholder, fetchResults, on
             <li key={`${item.id}-${item.primary}`}>
               <button
                 type="button"
+                data-track="Elegir sugerencia"
                 onClick={() => handleSelect(item)}
                 style={{
                   width: '100%',
