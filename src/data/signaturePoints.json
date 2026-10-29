@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-15T21:48:35.338Z",
+  "lastUpdated": "2026-10-29T19:42:46.371Z",
   "points": [
     {
       "id": "abogado-mancera",
@@ -142,6 +142,72 @@
       "lng": -117.0003865,
       "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Street View de Calz. Escolar 5A, Agua Caliente)",
       "geocodePrecision": "exacta",
+      "confianza": "alta"
+    },
+    {
+      "id": "abogado-orozco",
+      "nombre": "Joseph Haydn Orozco Vega (GDL)",
+      "tipo": "abogado",
+      "direccion": "Reforma 1063, Colonia Santa Teresita, C.P. 44600, Guadalajara, Jalisco",
+      "lat": 20.6805712,
+      "lng": -103.3783886,
+      "geocodeMatch": "Calle Reforma, Rojas Ladrón de Guevara / Santa Teresita, Guadalajara, Jalisco",
+      "geocodePrecision": "aproximada (calle Reforma, sin número)",
+      "confianza": "media"
+    },
+    {
+      "id": "abogado-diego-gdl",
+      "nombre": "Diego (GDL)",
+      "tipo": "abogado",
+      "direccion": "Campo Castillo 1045, Colonia Campo Real, C.P. 45134, Zapopan, Jalisco",
+      "lat": 20.7896812,
+      "lng": -103.4459064,
+      "geocodeMatch": "Avenida Campo Castillo, Campo Real, Nuevo México, Zapopan, Región Centro, Jalisco, 45134, México",
+      "geocodePrecision": "aproximada (matched: \"Campo Castillo 1045, Campo Real, Zapopan, Jalisco, México\")",
+      "confianza": "alta"
+    },
+    {
+      "id": "abogado-max-gdl",
+      "nombre": "Max (GDL)",
+      "tipo": "abogado",
+      "direccion": "Rinconada del Olmo 2518, Colonia Jardines del Valle, C.P. 45138, Zapopan, Jalisco",
+      "lat": 20.7489669,
+      "lng": -103.4327529,
+      "geocodeMatch": "Jardines del Valle, Nuevo México, Zapopan, Región Centro, Jalisco, 45138, México",
+      "geocodePrecision": "aproximada (matched: \"Jardines del Valle, Zapopan, Jalisco, México, México\")",
+      "confianza": "media"
+    },
+    {
+      "id": "abogado-alex-gdl",
+      "nombre": "Alex (GDL)",
+      "tipo": "abogado",
+      "direccion": "Calle Alejandrina 3248, Colonia Victoria, C.P. 45088, Zapopan, Jalisco",
+      "lat": 20.6465346,
+      "lng": -103.4010922,
+      "geocodeMatch": "Calle Alejandrina, Residencial Victoria, Zapopan, Región Centro, Jalisco, 45089, México",
+      "geocodePrecision": "aproximada (matched: \"Alejandrina 3248, Victoria, Zapopan, Jalisco, México\")",
+      "confianza": "alta"
+    },
+    {
+      "id": "abogado-emily-gdl",
+      "nombre": "Emily (GDL)",
+      "tipo": "abogado",
+      "direccion": "Camino a las Moras 601, interior 162, San Agustín, C.P. 45145, Tlajomulco de Zúñiga, Jalisco",
+      "lat": 20.5547055,
+      "lng": -103.468148,
+      "geocodeMatch": "Camino a las Moras, Condominio Santa Anita, San Agustín, Tlajomulco de Zúñiga, Región Centro, Jalisco, 45645, México",
+      "geocodePrecision": "aproximada (matched: \"Camino a las Moras 601, San Agustín, Tlajomulco de Zúñiga, Jalisco, México\")",
+      "confianza": "alta"
+    },
+    {
+      "id": "salida-qro-central",
+      "nombre": "Abogados QRO · Central de Autobuses (punto de salida)",
+      "tipo": "abogado",
+      "direccion": "Prolongación Luis Vega y Monroy 800, Colonia Ex-Hacienda Carretas, C.P. 76079, Santiago de Querétaro, Qro",
+      "lat": 20.5802466,
+      "lng": -100.359448,
+      "geocodeMatch": "Calle Terminal de Autobuses, Santiago de Querétaro, Querétaro",
+      "geocodePrecision": "aproximada (calle de la Terminal de Autobuses)",
       "confianza": "alta"
     }
   ]

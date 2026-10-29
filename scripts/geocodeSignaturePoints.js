@@ -7,10 +7,11 @@
  * porque varias direcciones informales (manzana/lote, sin colonia) no
  * matchean tal cual en Nominatim.
  *
- * Uso: node scripts/geocodeSignaturePoints.js
+ * Uso: node scripts/geocodeSignaturePoints.js        (solo puntos nuevos)
+ *      node scripts/geocodeSignaturePoints.js --all  (rehace todos)
  */
 
-import { writeFileSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
@@ -154,6 +155,75 @@ const POINTS = [
       'Agua Caliente, Tijuana, Baja California, México',
     ],
   },
+  // Abogados de firma GDL (Josh, 2026-10-28)
+  {
+    id: 'abogado-orozco',
+    nombre: 'Joseph Haydn Orozco Vega (GDL)',
+    tipo: 'abogado',
+    direccion: 'Reforma 1063, Colonia Santa Teresita, C.P. 44600, Guadalajara, Jalisco',
+    variantes: [
+      'Avenida Reforma 1063, Santa Teresita, Guadalajara, Jalisco',
+      'Santa Teresita, Guadalajara, Jalisco, México',
+      '44600, Guadalajara, Jalisco, México',
+    ],
+  },
+  {
+    id: 'abogado-diego-gdl',
+    nombre: 'Diego (GDL)',
+    tipo: 'abogado',
+    direccion: 'Campo Castillo 1045, Colonia Campo Real, C.P. 45134, Zapopan, Jalisco',
+    variantes: [
+      'Campo Castillo 1045, Campo Real, Zapopan, Jalisco',
+      'Campo Real, Zapopan, Jalisco, México',
+      '45134, Zapopan, Jalisco, México',
+    ],
+  },
+  {
+    id: 'abogado-max-gdl',
+    nombre: 'Max (GDL)',
+    tipo: 'abogado',
+    direccion: 'Rinconada del Olmo 2518, Colonia Jardines del Valle, C.P. 45138, Zapopan, Jalisco',
+    variantes: [
+      'Rinconada del Olmo 2518, Jardines del Valle, Zapopan, Jalisco',
+      'Jardines del Valle, Zapopan, Jalisco, México',
+      '45138, Zapopan, Jalisco, México',
+    ],
+  },
+  {
+    id: 'abogado-alex-gdl',
+    nombre: 'Alex (GDL)',
+    tipo: 'abogado',
+    direccion: 'Calle Alejandrina 3248, Colonia Victoria, C.P. 45088, Zapopan, Jalisco',
+    variantes: [
+      'Alejandrina 3248, Victoria, Zapopan, Jalisco',
+      'Colonia Victoria, Zapopan, Jalisco, México',
+      '45088, Zapopan, Jalisco, México',
+    ],
+  },
+  {
+    id: 'abogado-emily-gdl',
+    nombre: 'Emily (GDL)',
+    tipo: 'abogado',
+    direccion: 'Camino a las Moras 601, interior 162, San Agustín, C.P. 45145, Tlajomulco de Zúñiga, Jalisco',
+    variantes: [
+      'Camino a las Moras 601, San Agustín, Tlajomulco de Zúñiga, Jalisco',
+      'San Agustín, Tlajomulco de Zúñiga, Jalisco, México',
+      '45145, Tlajomulco de Zúñiga, Jalisco, México',
+    ],
+  },
+  // QRO: los abogados viven fuera de la zona y llegan en camión; salen a firmas desde la
+  // Central de Autobuses o la oficina (Zion, 2026-10-28). Uber de firmas solo dentro de Querétaro.
+  {
+    id: 'salida-qro-central',
+    nombre: 'Abogados QRO · Central de Autobuses (punto de salida)',
+    tipo: 'abogado',
+    direccion: 'Prolongación Luis Vega y Monroy 800, Colonia Ex-Hacienda Carretas, C.P. 76079, Santiago de Querétaro, Qro',
+    variantes: [
+      'Terminal de Autobuses de Querétaro, Prolongación Luis Vega y Monroy 800, Querétaro',
+      'Prolongación Luis Vega y Monroy 800, Querétaro',
+      '76079, Querétaro, México',
+    ],
+  },
 ]
 
 async function geocodeQuery(q) {
@@ -172,9 +242,15 @@ async function geocodeQuery(q) {
   }
 }
 
+// Por defecto solo geocodifica los puntos que todavía no están en el JSON y conserva los
+// existentes tal cual (coordenadas y 'confianza' revisados a mano). --all rehace todos.
 async function main() {
-  const results = []
-  for (const point of POINTS) {
+  const outPath = join(__dirname, '..', 'src', 'data', 'signaturePoints.json')
+  const all = process.argv.includes('--all')
+  const existing = all || !existsSync(outPath) ? [] : JSON.parse(readFileSync(outPath, 'utf8')).points
+  const existingIds = new Set(existing.map(p => p.id))
+  const results = [...existing]
+  for (const point of POINTS.filter(p => !existingIds.has(p.id))) {
     const queries = [point.direccion + ', México', ...(point.variantes || []).map(v => v + ', México')]
     process.stdout.write(`Geocodificando ${point.nombre}... `)
     let found = null
@@ -203,7 +279,6 @@ async function main() {
     }
   }
 
-  const outPath = join(__dirname, '..', 'src', 'data', 'signaturePoints.json')
   writeFileSync(outPath, JSON.stringify({ lastUpdated: new Date().toISOString(), points: results }, null, 2))
   console.log(`\n📝 Escrito en ${outPath}`)
 }
