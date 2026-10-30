@@ -3,7 +3,7 @@ import { PROTECTION_PLANS } from '../data/protectionPlans.js'
 export default function ResultBanner({ result }) {
   if (!result) return null
 
-  const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error } = result
+  const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error, fromMapClick } = result
 
   const TIER_LABELS = { 0: 'Garantizada (≤6 km)', 1: 'Estándar (6-15 km)', 2: 'Excepcional (15-25 km)' }
   const planLabel = firmaFisicaRadar?.planId
@@ -65,7 +65,9 @@ export default function ResultBanner({ result }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
           <span style={{ fontSize: '15px' }}>{hasCoverage ? '●' : '○'}</span>
           <p style={{ fontSize: '15px', fontWeight: '700', color: hasCoverage ? 'var(--mu-success)' : 'var(--mu-purple-dark)', fontFamily: 'var(--mu-font-ui)' }}>
-            {hasCoverage
+            {fromMapClick
+              ? <>{location} tiene zonas con cobertura de Protección. Busca la dirección o el código postal para confirmar</>
+              : hasCoverage
               ? <>En {location} están disponibles todas las Protecciones de MoradaUno, Servicios de Investigación y Firma de contratos</>
               : nearCoverage
                 ? <>En {location} podemos ofrecer únicamente Servicios de investigación y Firma de contratos electrónico</>
@@ -76,6 +78,11 @@ export default function ResultBanner({ result }) {
         {/* Bullet 2: Cobertura de firma física — siempre se muestra. La tarifa aproximada fuera de capa
             (estimatedFare) se sigue calculando pero está OCULTA: no es seguro que se vaya a cobrar, así que
             fuera de capa se ofrece firma electrónica en su lugar. */}
+        {!firmaFisicaRadar && !fromMapClick && (
+          <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
+            Cobertura de firma física: no se pudo calcular porque no se ubicó la dirección en el mapa. Consulta con tu agente MoradaUno
+          </p>
+        )}
         {firmaFisicaRadar?.error && (
           <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
             ⚠️ No se pudo calcular la cobertura de firma física: {firmaFisicaRadar.error}
@@ -98,6 +105,7 @@ export default function ResultBanner({ result }) {
             {firmaFisicaRadar.tier != null && ` · capa ${TIER_LABELS[firmaFisicaRadar.tier]}`}
             {firmaFisicaRadar.outsideZone && ` · fuera de la ciudad de ${firmaFisicaRadar.outsideZone} (Uber de firmas solo dentro)`}
             {firmaFisicaRadar.withoutProtection && ' · sin cobertura de Protección'}
+            {firmaFisicaRadar.picError && ' · no se pudo consultar PIC (se evaluó sin PIC)'}
             {firmaFisicaRadar.isPIC && ' · PIC'}
             {firmaFisicaRadar.rentAmountRaw != null && ` · renta $${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')}`}
             {planLabel && ` · plan ${planLabel}`}

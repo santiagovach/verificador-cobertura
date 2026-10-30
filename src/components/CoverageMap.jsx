@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Map, useMap, useApiIsLoaded } from '@vis.gl/react-google-maps'
+import { Map, useMap, useApiIsLoaded, useApiLoadingStatus, APILoadingStatus } from '@vis.gl/react-google-maps'
 import signaturePointsData from '../data/signaturePoints.json'
+import coverageData from '../data/coverage.json'
 
 const SIGNATURE_POINTS = signaturePointsData.points.filter(p => p.lat != null && p.lng != null)
 
@@ -48,6 +49,10 @@ function MapTooltip({ content, position }) {
   )
 }
 
+const normalizeName = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+const municipalityKey = (municipio, estado) => `${normalizeName(municipio)}|||${normalizeName(estado)}`
+const SHEET_MUNICIPALITIES = new Set(coverageData.municipalities.map(m => municipalityKey(m.municipio, m.estado)))
+
 function CoverageLayer({ searchResult, onMunicipalityClick }) {
   const map = useMap()
   const dataLayerRef = useRef(null)
@@ -65,6 +70,11 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
     const layer = new g.Data({ map })
     dataLayerRef.current = layer
     layer.loadGeoJson('/coverage-municipalities.geojson', null, features => {
+      // Solo se pintan los municipios que hoy tienen CPs en "Con Cobertura": el geojson
+      // tenía municipios sin ningún CP (Chapala, Tequila...) que el buscador da sin cobertura.
+      for (const f of features || []) {
+        if (!SHEET_MUNICIPALITIES.has(municipalityKey(f.getProperty('municipio'), f.getProperty('estado')))) layer.remove(f)
+      }
       if (features && features.length > 0) setLoaded(true)
     })
     layer.setStyle(POLYGON_STYLE)
@@ -254,9 +264,31 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
 
 function MapLoader({ searchResult, onMunicipalityClick }) {
   const apiLoaded = useApiIsLoaded()
+  const apiStatus = useApiLoadingStatus()
 
   const mapHeight = 'calc(100vh - 220px)'
   const mapMinHeight = '500px'
+
+  // Si Google Maps no carga (llave, cuota, facturación) se dice, en vez de "Cargando mapa..." para siempre.
+  if (apiStatus === APILoadingStatus.FAILED || apiStatus === APILoadingStatus.AUTH_FAILURE) {
+    return (
+      <div role="alert" style={{
+        height: mapHeight,
+        minHeight: mapMinHeight,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: '0 24px',
+        background: 'var(--mu-neutral-100)',
+        borderRadius: 'var(--mu-radius)',
+        color: 'var(--mu-warning)',
+        fontSize: '14px',
+      }}>
+        No se pudo cargar Google Maps, así que el mapa y la búsqueda por dirección no están disponibles. Intenta recargar la página; si sigue, avisa a Santiago.
+      </div>
+    )
+  }
 
   if (!apiLoaded) {
     return (

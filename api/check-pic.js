@@ -5,7 +5,7 @@
  * califican como PIC. Tres fuentes distintas:
  *
  * 1. Propietario (landlordId): >10 rentas cerradas y renta promedio
- *    >= $20,000 en TODOS sus deals (calculado — no hay flag directo para
+ *    >= $20,000 en sus deals firmados (calculado — no hay flag directo para
  *    propietarios). "Cerrada" se aproxima con agreement.signing_date IS
  *    NOT NULL (no existe una columna literal de estatus "Closed").
  * 2. Asesor (brokerId): flag DIRECTO y autoritativo —
@@ -22,8 +22,11 @@
  * Acepta cualquier combinación de los tres — isPIC = true si CUALQUIERA
  * de los checks pasados califica.
  *
- * Auth: Bearer <google_access_token>, cualquier cuenta @moradauno.com.
+ * Auth: Bearer <google_access_token> de esta app, cualquier cuenta @moradauno.com
+ * verificada (ver _auth.js).
  */
+
+import { requireMoradaunoUser } from './_auth.js'
 
 const METABASE_URL = 'https://morada-uno.metabaseapp.com'
 const DB_ID = 2 // M1ApiProd mysql
@@ -55,26 +58,6 @@ function setCors(req, res) {
   res.setHeader('Vary', 'Origin')
 }
 
-async function requireMoradaunoUser(req, res) {
-  const authHeader = req.headers['authorization']
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'No autorizado — falta token' })
-    return null
-  }
-  const accessToken = authHeader.slice(7)
-  const tokenRes = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`)
-  const tokenInfo = await tokenRes.json()
-  if (!tokenRes.ok || tokenInfo.error || !tokenInfo.email) {
-    res.status(401).json({ error: 'Sesión inválida o expirada. Vuelve a iniciar sesión.' })
-    return null
-  }
-  if (!tokenInfo.email.endsWith('@moradauno.com')) {
-    res.status(403).json({ error: 'Solo se permiten cuentas @moradauno.com' })
-    return null
-  }
-  return tokenInfo.email
-}
-
 const PIC_MIN_CLOSED_DEALS = 10
 const PIC_MIN_AVG_RENT = 20000
 
@@ -82,7 +65,7 @@ async function checkLandlordPIC(landlordId) {
   const rows = await queryMetabase(`
     SELECT
       SUM(CASE WHEN a.signing_date IS NOT NULL THEN 1 ELSE 0 END) AS closed_count,
-      AVG(a.value) AS avg_rent
+      AVG(CASE WHEN a.signing_date IS NOT NULL THEN a.value END) AS avg_rent
     FROM deal d
     JOIN agreement a ON d.agreement_id = a.id
     WHERE d.landlord_id = ${landlordId}
@@ -119,7 +102,7 @@ async function checkOrganizationPIC(organizationId) {
   const rows = await queryMetabase(`
     SELECT
       SUM(CASE WHEN a.signing_date IS NOT NULL THEN 1 ELSE 0 END) AS closed_count,
-      AVG(a.value) AS avg_rent
+      AVG(CASE WHEN a.signing_date IS NOT NULL THEN a.value END) AS avg_rent
     FROM deal d
     JOIN agreement a ON d.agreement_id = a.id
     JOIN broker b ON d.broker_id = b.id

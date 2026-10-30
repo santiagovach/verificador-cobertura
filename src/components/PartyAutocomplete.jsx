@@ -32,21 +32,23 @@ const LABEL_STYLE = {
  * el usuario escribe. `fetchResults(q)` debe regresar un array de
  * `{ id, primary, secondary, raw }`; `raw` es lo que se pasa a `onSelect`.
  *
- * `presetValue` permite que el padre imponga un texto desde afuera (ej.
- * autollenar "Inmobiliaria" cuando se elige un asesor que pertenece a
- * una) — cualquier cambio de valor reemplaza el texto mostrado.
+ * `presetValue` ({ text }) permite que el padre imponga un texto desde afuera
+ * (ej. autollenar "Inmobiliaria" cuando se elige un asesor que pertenece a
+ * una) — cada objeto nuevo reemplaza el texto, aunque el texto sea el mismo.
  */
 export default function PartyAutocomplete({ label, placeholder, fetchResults, onSelect, onClear, presetValue }) {
   const [text, setText] = useState('')
 
   useEffect(() => {
-    if (presetValue != null) setText(presetValue)
+    if (presetValue != null) setText(presetValue.text)
   }, [presetValue])
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [focused, setFocused] = useState(false)
   const debounceRef = useRef(null)
+  // Solo la respuesta de la última consulta se muestra (una vieja más lenta no la pisa).
+  const requestRef = useRef(0)
   const containerRef = useRef(null)
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export default function PartyAutocomplete({ label, placeholder, fetchResults, on
     onClear?.()
 
     clearTimeout(debounceRef.current)
+    const requestId = ++requestRef.current
     if (value.trim().length < 2) {
       setResults([])
       setOpen(false)
@@ -73,12 +76,13 @@ export default function PartyAutocomplete({ label, placeholder, fetchResults, on
       setLoading(true)
       try {
         const r = await fetchResults(value.trim())
+        if (requestId !== requestRef.current) return
         setResults(r)
         setOpen(r.length > 0)
       } catch {
-        setResults([])
+        if (requestId === requestRef.current) setResults([])
       } finally {
-        setLoading(false)
+        if (requestId === requestRef.current) setLoading(false)
       }
     }, DEBOUNCE_MS)
   }

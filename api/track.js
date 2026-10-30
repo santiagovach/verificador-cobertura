@@ -20,6 +20,7 @@
  */
 
 import crypto from 'node:crypto'
+import { verifyGoogleToken } from './_auth.js'
 
 const TOOL_ID = 'verificador-cobertura'
 const VALID_EVENT_TYPES = new Set(['login', 'pageview', 'action'])
@@ -49,13 +50,13 @@ function verifyTrackToken(secret, token) {
   }
 }
 
+// Misma validación que los demás endpoints (aud/azp de esta app, email verificado, dominio);
+// cualquier falla -> null y se intenta con el X-Track-Token.
 async function googleEmail(req) {
   const authHeader = req.headers['authorization']
   if (!authHeader?.startsWith('Bearer ')) return null
-  const tokenRes = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${authHeader.slice(7)}`)
-  const tokenInfo = await tokenRes.json()
-  if (!tokenRes.ok || tokenInfo.error || !tokenInfo.email?.endsWith('@moradauno.com')) return null
-  return tokenInfo.email
+  const result = await verifyGoogleToken(authHeader.slice(7))
+  return result.email || null
 }
 
 function setCors(req, res) {

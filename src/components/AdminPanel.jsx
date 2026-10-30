@@ -149,8 +149,8 @@ export default function AdminPanel({ isAdmin, user, onSignIn, onClose }) {
               }}
             >
               Actualiza el Google Sheet con los nuevos códigos postales y luego
-              presiona el botón. El mapa se regenerará en{' '}
-              <strong>~60 segundos</strong>.
+              presiona el botón. Se lanza un nuevo deploy y los datos se actualizan
+              cuando termina el build (<strong>unos minutos</strong>).
             </p>
 
             <button

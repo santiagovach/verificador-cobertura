@@ -15,3 +15,6 @@ src/data/coverage.json
 data/municipios-mexico.geojson
 .vercel
 .env*
+
+# Domicilios de abogados (datos personales)
+data/signature-points.local.mjs

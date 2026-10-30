@@ -1,104 +1,86 @@
 {
-  "lastUpdated": "2026-10-29T19:42:46.371Z",
+  "lastUpdated": "2026-10-30T18:28:49.674Z",
   "points": [
     {
       "id": "abogado-mancera",
       "nombre": "Francisco Javier Mancera Rodríguez",
       "tipo": "abogado",
-      "direccion": "Cordilleras 49, Dep 103, Infonavit Iztacalco, Iztacalco, C.P. 09800, CDMX",
-      "lat": 19.3840964,
-      "lng": -99.1061694,
-      "geocodeMatch": "Colonia Iztacalco INFONAVIT, Ciudad de México, Iztacalco, Ciudad de México, 08900, México",
-      "geocodePrecision": "aproximada (matched: \"Infonavit Iztacalco, Iztacalco, Ciudad de México, México, México\")",
-      "confianza": "media"
+      "lat": 19.38,
+      "lng": -99.11,
+      "confianza": "media",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-silva",
       "nombre": "Alitzel Angelica Silva Ordaz",
       "tipo": "abogado",
-      "direccion": "Retorno 1 de sur 12c n. 6 interior 3, Col. Agrícola Oriental, C.P 08500, Alcaldía Iztacalco",
-      "lat": 19.3964015,
-      "lng": -99.0750502,
-      "geocodeMatch": "Retorno 1 Sur 12 B, Colonia Agrícola Oriental, Ciudad de México, Iztacalco, Ciudad de México, 08500, México",
-      "geocodePrecision": "aproximada (matched: \"Retorno 1 Sur 12C, Agrícola Oriental, Iztacalco, Ciudad de México, México\")",
-      "confianza": "media"
+      "lat": 19.4,
+      "lng": -99.08,
+      "confianza": "media",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-lopez",
       "nombre": "Luis López",
       "tipo": "abogado",
-      "direccion": "Calle 21, manzana 34, lote 13, Olivar del Conde, Primera Sección, Alvaro Obregón, Ciudad de México",
-      "lat": 19.3744819,
-      "lng": -99.2087385,
-      "geocodeMatch": "Calle 21, Colonia Olivar del Conde 1a. Sección, Presidentes, Ciudad de México, Álvaro Obregón, Ciudad de México, 01400, México",
-      "geocodePrecision": "aproximada (matched: \"Calle 21, Olivar del Conde 1a Sección, Álvaro Obregón, Ciudad de México, México\")",
-      "confianza": "media"
+      "lat": 19.37,
+      "lng": -99.21,
+      "confianza": "media",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-cruz-alexandro",
       "nombre": "Alexandro Cruz",
       "tipo": "abogado",
-      "direccion": "Calle Alzea, manzana 16, lote 7, Colonia Buenavista, Iztapalapa, Ciudad de México",
-      "lat": 19.3246891,
-      "lng": -99.0391431,
-      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Calle Azalea mz17 lt7, C.P. 09700, Buenavista, Ciudad de México)",
-      "geocodePrecision": "exacta",
-      "confianza": "alta"
+      "lat": 19.32,
+      "lng": -99.04,
+      "confianza": "alta",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-galvan",
       "nombre": "Angelica Galván",
       "tipo": "abogado",
-      "direccion": "Calle Coronas 1982, Colonia Aquiles de Serdán 15430, Venustiano Carranza, Ciudad de México",
-      "lat": 19.4468011,
-      "lng": -99.0938684,
-      "geocodeMatch": "Calle Coronas, Aquiles Serdán, Ciudad de México, Venustiano Carranza, Ciudad de México, 15430, México",
-      "geocodePrecision": "exacta",
-      "confianza": "alta"
+      "lat": 19.45,
+      "lng": -99.09,
+      "confianza": "alta",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-figueroa",
       "nombre": "César Figueroa",
       "tipo": "abogado",
-      "direccion": "calle Agustín Lara manzana 132 lote 19, Emiliano Zapata",
-      "lat": 19.3401911,
-      "lng": -98.9779091,
-      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Dolores del Río / Amp. Emiliano Zapata, C.P. 09638, Iztapalapa, Ciudad de México)",
-      "geocodePrecision": "exacta",
-      "confianza": "alta"
+      "lat": 19.34,
+      "lng": -98.98,
+      "confianza": "alta",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-trejo",
       "nombre": "Gabriela Trejo",
       "tipo": "abogado",
-      "direccion": "Bahía de ballenas 28 Int. 14, Verónica Anzures, Cdmx, Código postal 11300, Miguel Hidalgo",
-      "lat": 19.4372045,
-      "lng": -99.1771936,
-      "geocodeMatch": "Calle Bahía de Ballenas, Verónica Anzures, Polanco, Ciudad de México, Miguel Hidalgo, Ciudad de México, 11300, México",
-      "geocodePrecision": "aproximada (matched: \"Bahía de Ballenas 28, Verónica Anzures, Miguel Hidalgo, Ciudad de México, México\")",
-      "confianza": "media"
+      "lat": 19.44,
+      "lng": -99.18,
+      "confianza": "media",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-cruz-amairani",
       "nombre": "Amairani Cruz",
       "tipo": "abogado",
-      "direccion": "Flor silvestre 212, Col. Benito Juárez, Cd. Nezahualcóyotl, Edo. Méx.",
-      "lat": 19.4079964,
-      "lng": -99.0079357,
-      "geocodeMatch": "Pin de Google Maps confirmado por Santiago (Flor Silvestre 212, Benito Juárez, 57000 Nezahualcóyotl, Méx.)",
-      "geocodePrecision": "exacta",
-      "confianza": "alta"
+      "lat": 19.41,
+      "lng": -99.01,
+      "confianza": "alta",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-gonzalez",
       "nombre": "Rebeca González",
       "tipo": "abogado",
-      "direccion": "Calle Nahuataclas 12, Ajusco, Coyoacán, C.P. 04300, Ciudad de México",
-      "lat": 19.3277094,
-      "lng": -99.1517279,
-      "geocodeMatch": "Colonia Ajusco Huayamilpas, La Candelaria, Ciudad de México, Coyoacán, Ciudad de México, 04390, México",
-      "geocodePrecision": "aproximada (matched: \"Ajusco, Coyoacán, Ciudad de México, México, México\")",
-      "confianza": "media"
+      "lat": 19.33,
+      "lng": -99.15,
+      "confianza": "media",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "oficina-cdmx",
@@ -152,56 +134,46 @@
       "id": "abogado-orozco",
       "nombre": "Joseph Haydn Orozco Vega (GDL)",
       "tipo": "abogado",
-      "direccion": "Reforma 1063, Colonia Santa Teresita, C.P. 44600, Guadalajara, Jalisco",
-      "lat": 20.6805712,
-      "lng": -103.3783886,
-      "geocodeMatch": "Calle Reforma, Rojas Ladrón de Guevara / Santa Teresita, Guadalajara, Jalisco",
-      "geocodePrecision": "aproximada (calle Reforma, sin número)",
-      "confianza": "media"
+      "lat": 20.68,
+      "lng": -103.38,
+      "confianza": "media",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-diego-gdl",
       "nombre": "Diego (GDL)",
       "tipo": "abogado",
-      "direccion": "Campo Castillo 1045, Colonia Campo Real, C.P. 45134, Zapopan, Jalisco",
-      "lat": 20.7896812,
-      "lng": -103.4459064,
-      "geocodeMatch": "Avenida Campo Castillo, Campo Real, Nuevo México, Zapopan, Región Centro, Jalisco, 45134, México",
-      "geocodePrecision": "aproximada (matched: \"Campo Castillo 1045, Campo Real, Zapopan, Jalisco, México\")",
-      "confianza": "alta"
+      "lat": 20.79,
+      "lng": -103.45,
+      "confianza": "alta",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-max-gdl",
       "nombre": "Max (GDL)",
       "tipo": "abogado",
-      "direccion": "Rinconada del Olmo 2518, Colonia Jardines del Valle, C.P. 45138, Zapopan, Jalisco",
-      "lat": 20.7489669,
-      "lng": -103.4327529,
-      "geocodeMatch": "Jardines del Valle, Nuevo México, Zapopan, Región Centro, Jalisco, 45138, México",
-      "geocodePrecision": "aproximada (matched: \"Jardines del Valle, Zapopan, Jalisco, México, México\")",
-      "confianza": "media"
+      "lat": 20.75,
+      "lng": -103.43,
+      "confianza": "media",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-alex-gdl",
       "nombre": "Alex (GDL)",
       "tipo": "abogado",
-      "direccion": "Calle Alejandrina 3248, Colonia Victoria, C.P. 45088, Zapopan, Jalisco",
-      "lat": 20.6465346,
-      "lng": -103.4010922,
-      "geocodeMatch": "Calle Alejandrina, Residencial Victoria, Zapopan, Región Centro, Jalisco, 45089, México",
-      "geocodePrecision": "aproximada (matched: \"Alejandrina 3248, Victoria, Zapopan, Jalisco, México\")",
-      "confianza": "alta"
+      "lat": 20.65,
+      "lng": -103.4,
+      "confianza": "alta",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "abogado-emily-gdl",
       "nombre": "Emily (GDL)",
       "tipo": "abogado",
-      "direccion": "Camino a las Moras 601, interior 162, San Agustín, C.P. 45145, Tlajomulco de Zúñiga, Jalisco",
-      "lat": 20.5547055,
-      "lng": -103.468148,
-      "geocodeMatch": "Camino a las Moras, Condominio Santa Anita, San Agustín, Tlajomulco de Zúñiga, Región Centro, Jalisco, 45645, México",
-      "geocodePrecision": "aproximada (matched: \"Camino a las Moras 601, San Agustín, Tlajomulco de Zúñiga, Jalisco, México\")",
-      "confianza": "alta"
+      "lat": 20.55,
+      "lng": -103.47,
+      "confianza": "alta",
+      "ubicacion": "aproximada (~1 km)"
     },
     {
       "id": "salida-qro-central",

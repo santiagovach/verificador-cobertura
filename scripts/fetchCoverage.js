@@ -62,15 +62,33 @@ async function fetchCoverage() {
   console.log(`  Columnas detectadas: ${header.join(', ')}`)
   console.log(`  Filas de datos: ${dataRows.length}`)
 
+  // byCp[cp] es una LISTA: el Sheet repite ~140 CPs con municipios distintos (Izcalli/Teoloyucan,
+  // Tlaquepaque/Zapopan...) y antes ganaba el último renglón, así que el polígono se validaba
+  // contra el municipio equivocado y una dirección cubierta salía sin cobertura.
   const byCp = {}
   const municipalitySet = new Set()
+  const skipped = []
 
   for (const row of dataRows) {
     const [cp, municipio, estado, plaza] = row.map(v => v?.trim() || '')
-    if (!cp || cp.length !== 5 || !/^\d{5}$/.test(cp)) continue
+    if (!cp || cp.length !== 5 || !/^\d{5}$/.test(cp)) {
+      if (row.some(v => v?.trim())) skipped.push(row.join(' | '))
+      continue
+    }
 
-    byCp[cp] = { municipio, estado, plaza }
+    const entries = (byCp[cp] ||= [])
+    if (!entries.some(e => e.municipio === municipio && e.estado === estado)) entries.push({ municipio, estado, plaza })
     municipalitySet.add(`${municipio}|||${estado}`)
+  }
+
+  const duplicated = Object.entries(byCp).filter(([, entries]) => entries.length > 1)
+  if (skipped.length) console.log(`  ⚠️  ${skipped.length} renglones sin CP válido (ignorados), p. ej.: ${skipped.slice(0, 3).join(' / ')}`)
+  if (duplicated.length) console.log(`  ⚠️  ${duplicated.length} CPs con más de un municipio en el Sheet, p. ej.: ${duplicated.slice(0, 3).map(([cp, e]) => `${cp} (${e.map(x => x.municipio).join(' / ')})`).join(', ')}`)
+
+  // Si el tab viene medio borrado, mejor que el build falle a que producción pierda cobertura.
+  const MIN_CPS = 3000
+  if (Object.keys(byCp).length < MIN_CPS) {
+    throw new Error(`Solo ${Object.keys(byCp).length} CPs en "Con Cobertura" (mínimo esperado ${MIN_CPS}). ¿Se borró parte del Sheet?`)
   }
 
   const municipalities = Array.from(municipalitySet).map(key => {

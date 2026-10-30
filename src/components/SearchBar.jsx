@@ -43,12 +43,31 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
   // Si el asesor elegido pertenece a una inmobiliaria, autollenamos ese
   // campo — Santiago pidió esto explícitamente para no repetir el mismo
   // dato dos veces.
+  // Si la inmobiliaria se autollenó y luego se cambia o borra el asesor, se borra también: antes
+  // se quedaba y seguía contando para PIC con un propietario que no tenía nada que ver.
+  const [agencyFromParty, setAgencyFromParty] = useState(false)
+
+  function clearAutoFilledAgency() {
+    if (!agencyFromParty) return
+    setAgency(null)
+    setAgencyPresetValue({ text: '' })
+    setAgencyFromParty(false)
+  }
+
   function handlePartySelect(raw) {
     setParty(raw)
     if (raw.type === 'broker' && raw.organizationId && raw.organizationName) {
       setAgency({ id: raw.organizationId, name: raw.organizationName })
-      setAgencyPresetValue(raw.organizationName)
+      setAgencyPresetValue({ text: raw.organizationName })
+      setAgencyFromParty(true)
+    } else {
+      clearAutoFilledAgency()
     }
+  }
+
+  function handlePartyClear() {
+    setParty(null)
+    clearAutoFilledAgency()
   }
 
   const fetchParty = useCallback(q => searchParty(accessToken, q).then(rows =>
@@ -297,15 +316,15 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
             placeholder="Nombre o teléfono"
             fetchResults={fetchParty}
             onSelect={handlePartySelect}
-            onClear={() => setParty(null)}
+            onClear={handlePartyClear}
           />
           <PartyAutocomplete
             label="Inmobiliaria"
             placeholder="Nombre"
             fetchResults={fetchAgency}
             presetValue={agencyPresetValue}
-            onSelect={raw => setAgency(raw)}
-            onClear={() => setAgency(null)}
+            onSelect={raw => { setAgency(raw); setAgencyFromParty(false) }}
+            onClear={() => { setAgency(null); setAgencyFromParty(false) }}
           />
           <div>
             <label style={FIELD_LABEL_STYLE}>Plan de protección</label>

@@ -7,6 +7,8 @@
  * Auth: Bearer <google_access_token> en el header Authorization.
  */
 
+import { verifyGoogleToken } from '../_auth.js'
+
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean)
 
 function setCors(req, res) {
@@ -28,29 +30,13 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'No autorizado — falta token' })
   }
 
-  const accessToken = authHeader.slice(7)
-
   try {
-    // Validar el token de acceso con Google
-    const tokenRes = await fetch(
-      `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`
-    )
-    const tokenInfo = await tokenRes.json()
+    const auth = await verifyGoogleToken(authHeader.slice(7))
+    if (!auth.email) return res.status(auth.status).json({ error: auth.error })
+    const email = auth.email
 
-    if (!tokenRes.ok || tokenInfo.error) {
-      return res.status(401).json({ error: 'Sesión inválida o expirada. Vuelve a iniciar sesión.' })
-    }
-
-    const email = tokenInfo.email
-    if (!email) {
-      return res.status(401).json({ error: 'No se pudo verificar el email.' })
-    }
-
-    if (!email.endsWith('@moradauno.com')) {
-      return res.status(403).json({ error: 'Solo se permiten cuentas @moradauno.com' })
-    }
-
-    if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(email)) {
+    // Fail closed: sin ADMIN_EMAILS configurado nadie es admin.
+    if (!ADMIN_EMAILS.includes(email)) {
       return res.status(403).json({
         error: `Tu cuenta (${email}) no tiene permisos de administrador.`,
       })
@@ -67,7 +53,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({
-      message: '¡Sincronización iniciada! El mapa se actualizará en aproximadamente 60 segundos.',
+      message: 'Redeploy en cola. Los datos se actualizarán cuando termine el build (unos minutos); si no cambian, revisa el deploy en Vercel.',
       triggeredBy: email,
     })
   } catch (err) {

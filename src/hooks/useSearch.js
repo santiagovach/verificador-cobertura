@@ -58,6 +58,9 @@ function findCoveredMunicipality(googleMunicipio, googleEstado) {
 
 // ─── Geocoding ────────────────────────────────────────────────────────────────
 
+// Google no respondió (Maps no cargó, llave/cuota/facturación): distinto de "no existe esa dirección".
+class MapsUnavailableError extends Error {}
+
 async function geocode(query, isCP = false) {
   let g = window.google?.maps
   if (!g) {
@@ -66,7 +69,7 @@ async function geocode(query, isCP = false) {
       g = window.google?.maps
     }
   }
-  if (!g) return null
+  if (!g) throw new MapsUnavailableError()
 
   const geocoder = new g.Geocoder()
   const request = isCP
@@ -110,8 +113,19 @@ async function geocode(query, isCP = false) {
       lat: loc?.lat() ?? null,
       lng: loc?.lng() ?? null,
     }
-  } catch {
-    return null
+  } catch (err) {
+    if (['ZERO_RESULTS', 'INVALID_REQUEST'].includes(err?.code)) return null
+    throw new MapsUnavailableError(err?.code || err?.message)
+  }
+}
+
+// CP: sin Google igual se puede contestar la cobertura con el Sheet; solo falta la ubicación.
+async function geocodeOrNull(query, isCP) {
+  try {
+    return await geocode(query, isCP)
+  } catch (err) {
+    if (err instanceof MapsUnavailableError) return null
+    throw err
   }
 }
 
@@ -140,7 +154,7 @@ export function useSearch() {
 
       if (CP_REGEX.test(query.trim())) {
         cp = query.trim()
-        const geo = await geocode(cp, true)
+        const geo = await geocodeOrNull(cp, true)
         if (geo) {
           lat = geo.lat
           lng = geo.lng
@@ -169,25 +183,9 @@ export function useSearch() {
       // resultado — sin ellos, se evalúa con el peor caso (renta $0, sin
       // PIC), que es exactamente lo que se necesita para decidir gratis vs.
       // tarifa. Ver src/lib/uberFareEstimate.js.
-      const resolveRadar = async (searchLat, searchLng, plaza) => {
+      const resolveRadar = async (searchLat, searchLng, plaza, { withPIC = true } = {}) => {
         if (searchLat == null || searchLng == null) return null
         const hasRentAmount = rentAmount != null && rentAmount !== '' && !Number.isNaN(rentAmount)
-
-        let isPIC = false
-        try {
-          const organizationIds = []
-          if (party?.type === 'broker' && party.organizationId) organizationIds.push(party.organizationId)
-          if (agency?.id) organizationIds.push(agency.id)
-          const landlordId = party?.type === 'landlord' ? party.id : undefined
-          const brokerId = party?.type === 'broker' ? party.id : undefined
-
-          if (landlordId || brokerId || organizationIds.length > 0) {
-            const picResult = await checkPIC(accessToken, { landlordId, brokerId, organizationIds })
-            isPIC = picResult.isPIC
-          }
-        } catch (err) {
-          return { error: err.message }
-        }
 
         // El tipo de protección ajusta la renta "efectiva" para el radar,
         // ya considerando el pago mínimo y el tope de renta protegida de
@@ -198,14 +196,32 @@ export function useSearch() {
         // ingreso; el IVA es un traspaso al SAT, no revenue).
         const revenue = hasRentAmount ? actualFeeForPlan(rentAmount, planId, { plaza, propertyType }) : null
 
-        let radar = checkSignatureRadar(
-          { lat: searchLat, lng: searchLng },
-          { rentAmount: effectiveRent, isPIC }
-        )
+        const point = { lat: searchLat, lng: searchLng }
+        let radar = checkSignatureRadar(point, { rentAmount: effectiveRent, isPIC: false })
+
+        // PIC solo puede cambiar el resultado entre 6 y 25 km cuando sin PIC no alcanza, así que solo
+        // ahí se consulta. Si Metabase falla, el radar se queda como "no PIC" con aviso — antes el
+        // error borraba todo el resultado de firma física.
+        let picError = null
+        const organizationIds = []
+        if (party?.type === 'broker' && party.organizationId) organizationIds.push(party.organizationId)
+        if (agency?.id) organizationIds.push(agency.id)
+        const landlordId = party?.type === 'landlord' ? party.id : undefined
+        const brokerId = party?.type === 'broker' ? party.id : undefined
+        const picCanMatter = radar && !radar.covered && radar.distanceKm > 6 && radar.distanceKm <= 25
+        if (withPIC && picCanMatter && (landlordId || brokerId || organizationIds.length > 0)) {
+          try {
+            const picResult = await checkPIC(accessToken, { landlordId, brokerId, organizationIds })
+            if (picResult.isPIC) radar = checkSignatureRadar(point, { rentAmount: effectiveRent, isPIC: true })
+          } catch (err) {
+            picError = err.message
+          }
+        }
+
         // Sin tolerancia de borde: Corregidora/El Marqués están pegados a la ciudad de Querétaro.
         const zone = radar?.nearestPoint.soloMunicipio
-        if (zone) radar = restrictToZone(radar, await pointInMunicipality(zone, { lat: searchLat, lng: searchLng }, 0))
-        return radar && { ...radar, rentAmountRaw: hasRentAmount ? rentAmount : null, planId: planId || null, revenue }
+        if (zone) radar = restrictToZone(radar, await pointInMunicipality(zone, point, 0))
+        return radar && { ...radar, picError, rentAmountRaw: hasRentAmount ? rentAmount : null, planId: planId || null, revenue }
       }
 
       // 1. Exact CP match
@@ -218,18 +234,24 @@ export function useSearch() {
       //    bloques), así que un CP sin renglón propio hereda el de su bloque. Fuera
       //    de CDMX el bloque solo cuenta si el punto cae dentro del polígono del
       //    municipio del bloque (Santiago, 2026-10-30) — sin polígono no se hereda.
-      const ownEntry = cp && coverageData.byCp[cp]
-      const blockEntry = !ownEntry && cp && coverageData.byCp[`${cp.slice(0, 4)}0`]
+      //    Un CP puede venir con varios municipios (el Sheet repite ~130): cuenta el
+      //    renglón cuyo polígono contiene el punto.
+      const ownEntries = (cp && coverageData.byCp[cp]) || []
+      const blockEntries = ownEntries.length ? [] : (cp && coverageData.byCp[`${cp.slice(0, 4)}0`]) || []
       const isCdmx = entry => normalizeState(entry.estado) === 'ciudad de mexico'
-      let exactEntry = null
-      if (ownEntry) {
-        exactEntry = isCdmx(ownEntry) || (await pointInMunicipality(ownEntry, { lat, lng })) !== false ? ownEntry : null
-      } else if (blockEntry) {
-        exactEntry = isCdmx(blockEntry) || (await pointInMunicipality(blockEntry, { lat, lng })) === true ? blockEntry : null
-      }
+      const containment = await Promise.all(
+        [...ownEntries, ...blockEntries].map(e => (isCdmx(e) ? true : pointInMunicipality(e, { lat, lng })))
+      )
+      const ownChecks = containment.slice(0, ownEntries.length)
+      const blockChecks = containment.slice(ownEntries.length)
+      const exactEntry =
+        ownEntries[ownChecks.indexOf(true)] ||
+        ownEntries[ownChecks.indexOf(null)] ||
+        blockEntries[blockChecks.indexOf(true)] ||
+        null
       if (exactEntry) {
         if (!lat && !lng) {
-          const fallback = await geocode(`${exactEntry.municipio}, ${exactEntry.estado}, México`)
+          const fallback = await geocodeOrNull(`${exactEntry.municipio}, ${exactEntry.estado}, México`)
           if (fallback) { lat = fallback.lat; lng = fallback.lng }
         }
         setResult({
@@ -251,15 +273,19 @@ export function useSearch() {
         hasCoverage: false,
         nearCoverage: distanceToCoverageKm != null && distanceToCoverageKm <= 10,
         distanceToCoverageKm,
-        firmaFisicaRadar: requireProtectionCoverage(await resolveRadar(lat, lng)),
+        firmaFisicaRadar: requireProtectionCoverage(await resolveRadar(lat, lng, undefined, { withPIC: false })),
         cp,
         municipio: geocodedAdminMunicipio || geocodedMunicipio,
         estado: geocodedEstado,
         lat,
         lng,
       })
-    } catch {
-      setResult({ error: 'Ocurrió un error al verificar. Intenta de nuevo.' })
+    } catch (err) {
+      setResult({
+        error: err instanceof MapsUnavailableError
+          ? 'Google Maps no respondió, así que no pudimos ubicar la dirección. Intenta de nuevo en un momento o busca por código postal.'
+          : 'Ocurrió un error al verificar. Intenta de nuevo.',
+      })
     } finally {
       if (searchId === latestSearchRef.current) setIsLoading(false)
     }
@@ -277,6 +303,8 @@ export function useSearch() {
     latestSearchRef.current++
     setResultState({
       hasCoverage: true,
+      // La cobertura es por CP, no por municipio entero: el banner pide buscar la dirección.
+      fromMapClick: true,
       cp: null,
       municipio: munMatch.municipio,
       estado: munMatch.estado,

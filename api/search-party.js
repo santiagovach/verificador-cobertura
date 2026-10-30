@@ -11,14 +11,29 @@
  * "4424397797", "55 4870 2698", etc.) — solo se activa esa comparación
  * si el texto tiene al menos 4 dígitos, para no matchear todo por accidente.
  *
- * Auth: Bearer <google_access_token>, cualquier cuenta @moradauno.com.
+ * Auth: Bearer <google_access_token> de esta app, cualquier cuenta @moradauno.com
+ * verificada (ver _auth.js).
  */
+
+import { requireMoradaunoUser } from './_auth.js'
 
 const METABASE_URL = 'https://morada-uno.metabaseapp.com'
 const DB_ID = 2 // M1ApiProd mysql
 
 function escapeSqlString(str) {
   return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
+
+// Escapa los comodines de LIKE (% y _) y la propia diagonal ANTES de
+// escapeSqlString: así '%' llega al patrón como '\%' (literal), no como comodín.
+function escapeLikeTerm(str) {
+  return escapeSqlString(String(str).replace(/[\\%_]/g, '\\$&'))
+}
+
+// Limpia el texto de búsqueda: sin caracteres de plantilla de Metabase
+// ({{ }} / [[ ]]), sin espacios a los lados y máximo 80 caracteres.
+function cleanQuery(raw) {
+  return String(raw || '').replace(/[{}\[\]]/g, '').trim().slice(0, 80).trim()
 }
 
 async function queryMetabase(sql) {
@@ -48,26 +63,6 @@ function setCors(req, res) {
   res.setHeader('Vary', 'Origin')
 }
 
-async function requireMoradaunoUser(req, res) {
-  const authHeader = req.headers['authorization']
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'No autorizado — falta token' })
-    return null
-  }
-  const accessToken = authHeader.slice(7)
-  const tokenRes = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`)
-  const tokenInfo = await tokenRes.json()
-  if (!tokenRes.ok || tokenInfo.error || !tokenInfo.email) {
-    res.status(401).json({ error: 'Sesión inválida o expirada. Vuelve a iniciar sesión.' })
-    return null
-  }
-  if (!tokenInfo.email.endsWith('@moradauno.com')) {
-    res.status(403).json({ error: 'Solo se permiten cuentas @moradauno.com' })
-    return null
-  }
-  return tokenInfo.email
-}
-
 export default async function handler(req, res) {
   setCors(req, res)
   if (req.method === 'OPTIONS') return res.status(200).end()
@@ -76,10 +71,14 @@ export default async function handler(req, res) {
   const email = await requireMoradaunoUser(req, res)
   if (!email) return
 
-  const q = (req.query.q || '').trim()
+  const q = cleanQuery(req.query.q)
   if (q.length < 2) return res.status(200).json({ results: [] })
 
-  const escaped = escapeSqlString(q)
+  const exact = escapeSqlString(q)
+  const like = escapeLikeTerm(q)
+  // Orden por calidad de match: exacto, luego "empieza con", luego el resto
+  // (incluye matches por teléfono), y al final alfabético.
+  const rank = col => `CASE WHEN ${col} = '${exact}' THEN 0 WHEN ${col} LIKE '${like}%' THEN 1 ELSE 2 END`
   const digits = q.replace(/\D/g, '')
   const normalizedPhone = "REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', '')"
   const phoneClause = digits.length >= 4 ? ` OR ${normalizedPhone} LIKE '%${digits}%'` : ''
@@ -87,11 +86,11 @@ export default async function handler(req, res) {
   try {
     const rows = await queryMetabase(`
       (SELECT id, name, phone, NULL AS organization_id, NULL AS organization_name, 'landlord' AS party_type
-       FROM landlord WHERE (name LIKE '%${escaped}%'${phoneClause}) ORDER BY name LIMIT 6)
+       FROM landlord WHERE (name LIKE '%${like}%'${phoneClause}) ORDER BY ${rank('name')}, name LIMIT 6)
       UNION ALL
       (SELECT b.id, b.name, b.phone, b.organization_id, bo.name AS organization_name, 'broker' AS party_type
        FROM broker b LEFT JOIN broker_organization bo ON b.organization_id = bo.id
-       WHERE (b.name LIKE '%${escaped}%'${phoneClause.replaceAll('phone', 'b.phone')}) ORDER BY b.name LIMIT 6)
+       WHERE (b.name LIKE '%${like}%'${phoneClause.replaceAll('phone', 'b.phone')}) ORDER BY ${rank('b.name')}, b.name LIMIT 6)
     `)
 
     const results = rows.map(r => ({
