@@ -73,11 +73,16 @@ export function checkSignatureRadar(latlng, economics = {}) {
 // insideZone viene de pointInMunicipality: false = fuera; null (sin polígono) = se confía en la distancia.
 export function restrictToZone(radar, insideZone) {
   if (!radar?.covered || insideZone !== false) return radar
-  return {
-    ...radar,
-    covered: false,
-    tier: null,
-    outsideZone: radar.nearestPoint.soloMunicipio.municipio,
-    estimatedFare: estimateUberFareRoundTrip(radar.distanceKm),
-  }
+  return markNotCovered(radar, { outsideZone: radar.nearestPoint.soloMunicipio.municipio })
+}
+
+// Sin cobertura de Protección no hay firma física gratis aunque haya un abogado cerca: el resultado
+// ofrece firma electrónica, igual que la línea de Protección (Santiago, 2026-10-30).
+export function requireProtectionCoverage(radar) {
+  if (!radar?.covered) return radar
+  return markNotCovered(radar, { withoutProtection: true })
+}
+
+function markNotCovered(radar, extra) {
+  return { ...radar, covered: false, tier: null, estimatedFare: estimateUberFareRoundTrip(radar.distanceKm), ...extra }
 }

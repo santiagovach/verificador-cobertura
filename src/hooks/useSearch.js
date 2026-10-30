@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import coverageData from '../data/coverage.json'
-import { checkSignatureRadar, restrictToZone } from '../lib/coverageRadius.js'
+import { checkSignatureRadar, restrictToZone, requireProtectionCoverage } from '../lib/coverageRadius.js'
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
@@ -213,19 +213,20 @@ export function useSearch() {
       //    como Cuernavaca aunque es Tepoztlán): si el punto geocodificado cae
       //    fuera del polígono de ese municipio, el renglón está mal → sin
       //    cobertura. Sin polígono/coordenadas se confía en el Sheet.
-      //    CDMX viene en el Sheet por bloques de 10 CPs (04360 cubre 04360–04369:
-      //    1,450 de 1,453 renglones terminan en 0), así que ahí un CP sin renglón
-      //    propio hereda el de su bloque. Solo CDMX — en los demás estados el
-      //    Sheet mezcla CPs exactos y bloques.
-      const blockEntry = cp && coverageData.byCp[`${cp.slice(0, 4)}0`]
-      const sheetEntry = coverageData.byCp[cp] ||
-        (blockEntry && normalizeState(blockEntry.estado) === 'ciudad de mexico' ? blockEntry : null)
-      const exactEntry = sheetEntry && (
-        normalizeState(sheetEntry.estado) === 'ciudad de mexico' ||
-        (await pointInMunicipality(sheetEntry, { lat, lng })) !== false
-      )
-        ? sheetEntry
-        : null
+      //    El Sheet lista muchos CPs por bloques de 10 (04360 cubre 04360–04369 en
+      //    CDMX; 76070 cubre 76079 en Querétaro; León y Morelos van 100% por
+      //    bloques), así que un CP sin renglón propio hereda el de su bloque. Fuera
+      //    de CDMX el bloque solo cuenta si el punto cae dentro del polígono del
+      //    municipio del bloque (Santiago, 2026-10-30) — sin polígono no se hereda.
+      const ownEntry = cp && coverageData.byCp[cp]
+      const blockEntry = !ownEntry && cp && coverageData.byCp[`${cp.slice(0, 4)}0`]
+      const isCdmx = entry => normalizeState(entry.estado) === 'ciudad de mexico'
+      let exactEntry = null
+      if (ownEntry) {
+        exactEntry = isCdmx(ownEntry) || (await pointInMunicipality(ownEntry, { lat, lng })) !== false ? ownEntry : null
+      } else if (blockEntry) {
+        exactEntry = isCdmx(blockEntry) || (await pointInMunicipality(blockEntry, { lat, lng })) === true ? blockEntry : null
+      }
       if (exactEntry) {
         if (!lat && !lng) {
           const fallback = await geocode(`${exactEntry.municipio}, ${exactEntry.estado}, México`)
@@ -243,16 +244,14 @@ export function useSearch() {
         return
       }
 
-      // 2. No coverage — "Con Cobertura" is CP-exact for every plaza now, so an
-      //    absent CP means no coverage, full stop. No municipio or CP-prefix
-      //    fallback: a covered neighbor CP must never resurrect coverage for a
-      //    CP that was explicitly removed from the sheet.
+      // 2. No coverage — ni el CP ni su bloque de 10 (validado por polígono) están en
+      //    "Con Cobertura". No hay fallback por municipio ni por prefijo más amplio.
       const distanceToCoverageKm = distanceToNearestCoverage({ lat, lng })
       setResult({
         hasCoverage: false,
         nearCoverage: distanceToCoverageKm != null && distanceToCoverageKm <= 10,
         distanceToCoverageKm,
-        firmaFisicaRadar: await resolveRadar(lat, lng),
+        firmaFisicaRadar: requireProtectionCoverage(await resolveRadar(lat, lng)),
         cp,
         municipio: geocodedAdminMunicipio || geocodedMunicipio,
         estado: geocodedEstado,
