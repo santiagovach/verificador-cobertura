@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import coverageData from '../data/coverage.json'
 import { checkSignatureRadar, restrictToZone } from '../lib/coverageRadius.js'
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
@@ -88,8 +88,20 @@ async function geocode(query, isCP = false) {
       return null
     }
 
+    // Colonias, fraccionamientos o municipios ("Juriquilla, Qro.") geocodifican sin CP: se toma el
+    // CP del punto con geocodificación inversa en vez de responder "No encontramos esa dirección".
+    let cp = get('postal_code')
+    if (!cp && loc) {
+      try {
+        const { results: reverse } = await geocoder.geocode({ location: loc })
+        cp = reverse
+          ?.flatMap(r => r.address_components || [])
+          .find(c => c.types.includes('postal_code'))?.long_name ?? null
+      } catch { /* sin CP: se reporta como no encontrada */ }
+    }
+
     return {
-      cp: get('postal_code'),
+      cp,
       municipio: get('locality', 'administrative_area_level_2', 'sublocality_level_1'),
       // Municipio político — mejor etiqueta que 'locality' (que puede ser una
       // colonia o poblado) cuando Google lo devuelve.
@@ -106,10 +118,15 @@ async function geocode(query, isCP = false) {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useSearch() {
-  const [result, setResult] = useState(null)
+  const [result, setResultState] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  // Solo la búsqueda más reciente puede escribir el resultado: si una anterior (con otra dirección,
+  // renta o asesor) termina después — p. ej. por el check de PIC — ya no lo sobrescribe.
+  const latestSearchRef = useRef(0)
 
   const search = useCallback(async (query, { rentAmount, planId, propertyType, party, agency, accessToken } = {}) => {
+    const searchId = ++latestSearchRef.current
+    const setResult = value => { if (searchId === latestSearchRef.current) setResultState(value) }
     setIsLoading(true)
     setResult(null)
 
@@ -245,16 +262,21 @@ export function useSearch() {
     } catch {
       setResult({ error: 'Ocurrió un error al verificar. Intenta de nuevo.' })
     } finally {
-      setIsLoading(false)
+      if (searchId === latestSearchRef.current) setIsLoading(false)
     }
   }, [])
 
-  const clear = useCallback(() => setResult(null), [])
+  const clear = useCallback(() => {
+    latestSearchRef.current++
+    setResultState(null)
+    setIsLoading(false)
+  }, [])
 
   const selectMunicipality = useCallback((municipio, estado) => {
     const munMatch = findCoveredMunicipality(municipio, estado)
     if (!munMatch) return
-    setResult({
+    latestSearchRef.current++
+    setResultState({
       hasCoverage: true,
       cp: null,
       municipio: munMatch.municipio,

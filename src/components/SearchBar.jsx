@@ -84,6 +84,12 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
     }
   }
 
+  // El Autocomplete se crea una sola vez: antes se recreaba con cada tecla de renta/plan/asesor
+  // (instancias y dropdowns duplicados) y se quedaba con el onSearch del render en que se creó
+  // (token de sesión viejo). Lee siempre los valores actuales por ref.
+  const latestRef = useRef({})
+  latestRef.current = { onSearch, buildOptions }
+
   useEffect(() => {
     if (!places || !inputRef.current) return
 
@@ -97,14 +103,22 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
       const place = ac.getPlace()
       if (place?.formatted_address) {
         setQuery(place.formatted_address)
-        onSearch(place.formatted_address, buildOptions())
+        latestRef.current.onSearch(place.formatted_address, latestRef.current.buildOptions())
       }
     })
 
     return () => {
       window.google.maps.event.removeListener(listener)
+      window.google.maps.event.clearInstanceListeners(ac)
+      document.querySelectorAll('.pac-container').forEach(el => el.remove())
     }
-  }, [places, rentAmount, planId, propertyType, party, agency]) // onSearch is stable (useCallback with no deps)
+  }, [places])
+
+  // Enter sobre una sugerencia la elige (place_changed busca la dirección completa); sin esto el
+  // form también se enviaba con el texto a medias y había dos búsquedas con resultados distintos.
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && document.querySelector('.pac-container .pac-item-selected')) e.preventDefault()
+  }
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -156,6 +170,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
             placeholder="Ej: 06600  o  Av. Reforma 222, CDMX"
             maxLength={200}
             autoComplete="off"
+            onKeyDown={handleKeyDown}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             style={{
