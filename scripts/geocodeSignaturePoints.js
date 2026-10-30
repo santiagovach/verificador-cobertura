@@ -138,6 +138,8 @@ const POINTS = [
     id: 'oficina-qro',
     nombre: 'MoradaUno Oficina QRO',
     tipo: 'oficina',
+    // Uber de firmas solo dentro de la ciudad de Querétaro (Zion, 2026-10-28)
+    soloMunicipio: { municipio: 'Querétaro', estado: 'Querétaro' },
     direccion: 'Avenida Camino Real de Carretas Numero 104, Oficina 503, Colonia Milenio III, C.P. 76060 Querétaro, Qro',
     variantes: [
       'Camino Real de Carretas 104, Milenio III, Querétaro',
@@ -217,6 +219,8 @@ const POINTS = [
     id: 'salida-qro-central',
     nombre: 'Abogados QRO · Central de Autobuses (punto de salida)',
     tipo: 'abogado',
+    // Uber de firmas solo dentro de la ciudad de Querétaro (Zion, 2026-10-28)
+    soloMunicipio: { municipio: 'Querétaro', estado: 'Querétaro' },
     direccion: 'Prolongación Luis Vega y Monroy 800, Colonia Ex-Hacienda Carretas, C.P. 76079, Santiago de Querétaro, Qro',
     variantes: [
       'Terminal de Autobuses de Querétaro, Prolongación Luis Vega y Monroy 800, Querétaro',
@@ -275,7 +279,7 @@ async function main() {
     } else {
       const precisionNote = matchedQuery === queries[0] ? 'exacta' : `aproximada (matched: "${matchedQuery}")`
       console.log(`✅ ${found.lat}, ${found.lng} [${precisionNote}]`)
-      results.push({ id: point.id, nombre: point.nombre, tipo: point.tipo, direccion: point.direccion, lat: found.lat, lng: found.lng, geocodeMatch: found.displayName, geocodePrecision: precisionNote })
+      results.push({ id: point.id, nombre: point.nombre, tipo: point.tipo, direccion: point.direccion, lat: found.lat, lng: found.lng, geocodeMatch: found.displayName, geocodePrecision: precisionNote, ...(point.soloMunicipio && { soloMunicipio: point.soloMunicipio }) })
     }
   }
 

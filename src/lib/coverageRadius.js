@@ -59,11 +59,25 @@ export function checkSignatureRadar(latlng, economics = {}) {
     covered,
     tier,
     distanceKm,
-    nearestPoint: { id: nearest.point.id, nombre: nearest.point.nombre, tipo: nearest.point.tipo },
+    nearestPoint: { id: nearest.point.id, nombre: nearest.point.nombre, tipo: nearest.point.tipo, soloMunicipio: nearest.point.soloMunicipio ?? null },
     effectiveRent: economics.rentAmount ?? null,
     isPIC: economics.isPIC ?? false,
     // Firma física ya no es "no disponible" fuera de la capa gratuita —
     // se ofrece por una tarifa estimada (aprox. Uber, ida y vuelta).
     estimatedFare: covered ? null : estimateUberFareRoundTrip(distanceKm),
+  }
+}
+
+// Puntos con 'soloMunicipio' (QRO): el Uber de firmas solo se cubre dentro de ese municipio
+// (Zion, 2026-10-28), así que fuera de él no hay firma física gratis aunque esté a pocos km.
+// insideZone viene de pointInMunicipality: false = fuera; null (sin polígono) = se confía en la distancia.
+export function restrictToZone(radar, insideZone) {
+  if (!radar?.covered || insideZone !== false) return radar
+  return {
+    ...radar,
+    covered: false,
+    tier: null,
+    outsideZone: radar.nearestPoint.soloMunicipio.municipio,
+    estimatedFare: estimateUberFareRoundTrip(radar.distanceKm),
   }
 }

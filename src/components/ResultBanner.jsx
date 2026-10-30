@@ -96,6 +96,7 @@ export default function ResultBanner({ result }) {
           <p style={{ fontSize: '12px', color: 'var(--mu-text-muted)', marginTop: '2px', marginLeft: '23px' }}>
             {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
             {firmaFisicaRadar.tier != null && ` · capa ${TIER_LABELS[firmaFisicaRadar.tier]}`}
+            {firmaFisicaRadar.outsideZone && ` · fuera de la ciudad de ${firmaFisicaRadar.outsideZone} (Uber de firmas solo dentro)`}
             {firmaFisicaRadar.isPIC && ' · PIC'}
             {firmaFisicaRadar.rentAmountRaw != null && ` · renta $${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')}`}
             {planLabel && ` · plan ${planLabel}`}

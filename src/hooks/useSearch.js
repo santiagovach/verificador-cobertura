@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import coverageData from '../data/coverage.json'
-import { checkSignatureRadar } from '../lib/coverageRadius.js'
+import { checkSignatureRadar, restrictToZone } from '../lib/coverageRadius.js'
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
@@ -181,10 +181,13 @@ export function useSearch() {
         // ingreso; el IVA es un traspaso al SAT, no revenue).
         const revenue = hasRentAmount ? actualFeeForPlan(rentAmount, planId, { plaza, propertyType }) : null
 
-        const radar = checkSignatureRadar(
+        let radar = checkSignatureRadar(
           { lat: searchLat, lng: searchLng },
           { rentAmount: effectiveRent, isPIC }
         )
+        // Sin tolerancia de borde: Corregidora/El Marqués están pegados a la ciudad de Querétaro.
+        const zone = radar?.nearestPoint.soloMunicipio
+        if (zone) radar = restrictToZone(radar, await pointInMunicipality(zone, { lat: searchLat, lng: searchLng }, 0))
         return radar && { ...radar, rentAmountRaw: hasRentAmount ? rentAmount : null, planId: planId || null, revenue }
       }
 

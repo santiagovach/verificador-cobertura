@@ -85,19 +85,19 @@ function nearEdge(polys, x, y, tolKm) {
 
 // true/false si hay polígono para ese municipio; null si no se puede validar
 // (sin polígono o sin coordenadas) — en ese caso se confía en el Sheet.
-export function polygonsContain(byKey, { municipio, estado }, { lat, lng }) {
+export function polygonsContain(byKey, { municipio, estado }, { lat, lng }, toleranceKm = EDGE_TOLERANCE_KM) {
   if (lat == null || lng == null) return null
   const polys = byKey.get(key(municipio, estado))
   if (!polys?.length) return null
   const inside = polys.some(([outer, ...holes]) =>
     ringContains(outer, lng, lat) && !holes.some(h => ringContains(h, lng, lat))
   )
-  return inside || nearEdge(polys, lng, lat, EDGE_TOLERANCE_KM)
+  return inside || (toleranceKm > 0 && nearEdge(polys, lng, lat, toleranceKm))
 }
 
-export async function pointInMunicipality(entry, point) {
+export async function pointInMunicipality(entry, point, toleranceKm) {
   try {
-    return polygonsContain(await loadPolygons(), entry, point)
+    return polygonsContain(await loadPolygons(), entry, point, toleranceKm)
   } catch {
     return null
   }
