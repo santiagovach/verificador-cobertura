@@ -16,6 +16,8 @@ const MINIMUM_FARE = 35
 // Velocidad promedio urbana asumida para convertir distancia a minutos —
 // no tenemos tiempo de viaje real, solo distancia en línea recta (haversine).
 const AVG_SPEED_KMH = 25
+// La distancia del radar es en línea recta; por calle sale ~35% más (auditoría 2026-10-30).
+const ROAD_FACTOR = 1.35
 
 /**
  * Estima el costo (ida y vuelta, redondeado a pesos) de mandar a un abogado
@@ -24,7 +26,8 @@ const AVG_SPEED_KMH = 25
  */
 export function estimateUberFareRoundTrip(distanceKm) {
   if (distanceKm == null || distanceKm < 0) return null
-  const minutes = (distanceKm / AVG_SPEED_KMH) * 60
-  const oneWay = Math.max(MINIMUM_FARE, BASE_FARE + PER_MINUTE * minutes + PER_KM * distanceKm)
+  const roadKm = distanceKm * ROAD_FACTOR
+  const minutes = (roadKm / AVG_SPEED_KMH) * 60
+  const oneWay = Math.max(MINIMUM_FARE, BASE_FARE + PER_MINUTE * minutes + PER_KM * roadKm)
   return Math.round(oneWay * 2)
 }

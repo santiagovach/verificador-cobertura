@@ -29,23 +29,46 @@ export function nearestSignaturePoint(latlng) {
   return { point: nearest, distanceKm: minDist }
 }
 
-// Capas de radio confirmadas con Santiago (2026-09-15):
-// 0-6km: siempre cubierto
-// 6-15km: cubierto si renta >= $25,000/mes o propietario PIC
-// 15-25km: cubierto si renta >= $60,000/mes, o (PIC y renta >= $25,000)
-// >25km: no cubierto, sin excepción
-export function resolveRadarCoverage({ distanceKm, rentAmount, isPIC }) {
-  const renta = rentAmount ?? 0
+// Cobrar el traslado fuera de la capa gratis. APAGADO hasta que GTM lo confirme: mientras tanto,
+// fuera de la capa se ofrece firma electrónica y `travelCharge` solo se calcula.
+export const CHARGE_TRAVEL = false
 
-  if (distanceKm <= 6) return { covered: true, tier: 0 }
-  if (distanceKm <= 15) return { covered: renta >= 25000 || isPIC === true, tier: 1 }
-  if (distanceKm <= 25) return { covered: renta >= 60000 || (isPIC === true && renta >= 25000), tier: 2 }
-  return { covered: false, tier: null }
+// Capas por distancia al punto más cercano, medidas en REVENUE NETO = lo que cobramos (antes de IVA)
+// menos el Uber ida y vuelta del abogado (Santiago, 2026-10-30): el viaje nunca se come el mínimo,
+// y el umbral sube con la distancia porque el Uber sube. Los montos son los de las capas originales
+// en renta (2026-09-15) expresados como cobro de M3 Residencial (30%): $25,000 → $7,500, $60,000 → $18,000.
+// 0-6 km: siempre gratis
+// 6-15 km: gratis si neto >= $7,500 o propietario PIC
+// 15-25 km: gratis si neto >= $18,000, o (PIC y neto >= $7,500)
+// >25 km: sin capa gratis
+export const TIER1_NET_REVENUE = 7500
+export const TIER2_NET_REVENUE = 18000
+
+export function resolveRadarCoverage({ distanceKm, revenue, isPIC }) {
+  const uber = estimateUberFareRoundTrip(distanceKm)
+  const net = (revenue ?? 0) - uber
+  const pic = isPIC === true
+
+  if (distanceKm <= 6) return { covered: true, tier: 0, uber, net, bar: 0 }
+  if (distanceKm <= 15) return { covered: net >= TIER1_NET_REVENUE || pic, tier: 1, uber, net, bar: TIER1_NET_REVENUE }
+  if (distanceKm <= 25) {
+    const bar = pic ? TIER1_NET_REVENUE : TIER2_NET_REVENUE
+    return { covered: net >= bar, tier: 2, uber, net, bar }
+  }
+  return { covered: false, tier: null, uber, net, bar: null }
+}
+
+// Lo que pagaría el cliente si se cobra el traslado: solo lo que falta para que nuestro neto llegue al
+// umbral de su capa, nunca más que el Uber completo. Más allá de 25 km, el Uber completo.
+function travelChargeFor({ covered, uber, net, bar }) {
+  if (covered) return 0
+  if (bar == null) return uber
+  return Math.min(uber, Math.max(0, Math.ceil(bar - net)))
 }
 
 /**
  * @param {{lat:number,lng:number}} latlng dirección buscada, ya geocodificada
- * @param {{rentAmount?:number, isPIC?:boolean}} economics datos del deal/propietario (lookup automático u override manual)
+ * @param {{revenue?:number, isPIC?:boolean}} economics cobro de la operación antes de IVA y PIC
  */
 export function checkSignatureRadar(latlng, economics = {}) {
   if (latlng?.lat == null || latlng?.lng == null) return null
@@ -53,18 +76,17 @@ export function checkSignatureRadar(latlng, economics = {}) {
   if (!nearest) return null
 
   const distanceKm = Math.round(nearest.distanceKm * 10) / 10
-  const { covered, tier } = resolveRadarCoverage({ distanceKm, ...economics })
+  const coverage = resolveRadarCoverage({ distanceKm, ...economics })
 
   return {
-    covered,
-    tier,
+    covered: coverage.covered,
+    tier: coverage.tier,
     distanceKm,
     nearestPoint: { id: nearest.point.id, nombre: nearest.point.nombre, tipo: nearest.point.tipo, soloMunicipio: nearest.point.soloMunicipio ?? null },
-    effectiveRent: economics.rentAmount ?? null,
     isPIC: economics.isPIC ?? false,
-    // Firma física ya no es "no disponible" fuera de la capa gratuita —
-    // se ofrece por una tarifa estimada (aprox. Uber, ida y vuelta).
-    estimatedFare: covered ? null : estimateUberFareRoundTrip(distanceKm),
+    uberEstimate: coverage.uber,
+    netRevenue: coverage.net,
+    travelCharge: travelChargeFor(coverage),
   }
 }
 
@@ -83,6 +105,7 @@ export function requireProtectionCoverage(radar) {
   return markNotCovered(radar, { withoutProtection: true })
 }
 
+// Fuera de la zona (QRO) o sin Protección no hay capa gratis: si se cobra, es el Uber completo.
 function markNotCovered(radar, extra) {
-  return { ...radar, covered: false, tier: null, estimatedFare: estimateUberFareRoundTrip(radar.distanceKm), ...extra }
+  return { ...radar, covered: false, tier: null, travelCharge: radar.uberEstimate, ...extra }
 }

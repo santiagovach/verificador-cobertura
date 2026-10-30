@@ -4,7 +4,7 @@ import { checkSignatureRadar, restrictToZone, requireProtectionCoverage } from '
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
-import { effectiveRentForPlan, actualFeeForPlan } from '../data/protectionPlans.js'
+import { radarRevenue, actualFeeForPlan } from '../data/protectionPlans.js'
 
 const CP_REGEX = /^\d{5}$/
 
@@ -187,17 +187,15 @@ export function useSearch() {
         if (searchLat == null || searchLng == null) return null
         const hasRentAmount = rentAmount != null && rentAmount !== '' && !Number.isNaN(rentAmount)
 
-        // El tipo de protección ajusta la renta "efectiva" para el radar,
-        // ya considerando el pago mínimo y el tope de renta protegida de
-        // cada plan (no solo renta x %). Ver src/data/protectionPlans.js.
-        // Sin plan seleccionado, no hay ajuste.
-        const effectiveRent = hasRentAmount ? effectiveRentForPlan(rentAmount, planId, { plaza, propertyType }) : undefined
+        // El radar decide con el cobro real de la operación (plan, plaza, tipo de inmueble, mínimo y
+        // tope) menos el Uber del abogado. Ver src/lib/coverageRadius.js.
+        const operationRevenue = hasRentAmount ? radarRevenue(rentAmount, planId, { plaza, propertyType }) : 0
         // Revenue = cobro antes de IVA (lo que MoradaUno reconoce como
         // ingreso; el IVA es un traspaso al SAT, no revenue).
         const revenue = hasRentAmount ? actualFeeForPlan(rentAmount, planId, { plaza, propertyType }) : null
 
         const point = { lat: searchLat, lng: searchLng }
-        let radar = checkSignatureRadar(point, { rentAmount: effectiveRent, isPIC: false })
+        let radar = checkSignatureRadar(point, { revenue: operationRevenue, isPIC: false })
 
         // PIC solo puede cambiar el resultado entre 6 y 25 km cuando sin PIC no alcanza, así que solo
         // ahí se consulta. Si Metabase falla, el radar se queda como "no PIC" con aviso — antes el
@@ -212,7 +210,7 @@ export function useSearch() {
         if (withPIC && picCanMatter && (landlordId || brokerId || organizationIds.length > 0)) {
           try {
             const picResult = await checkPIC(accessToken, { landlordId, brokerId, organizationIds })
-            if (picResult.isPIC) radar = checkSignatureRadar(point, { rentAmount: effectiveRent, isPIC: true })
+            if (picResult.isPIC) radar = checkSignatureRadar(point, { revenue: operationRevenue, isPIC: true })
           } catch (err) {
             picError = err.message
           }

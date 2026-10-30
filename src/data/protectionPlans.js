@@ -99,13 +99,11 @@ export function actualFeeForPlan(rentAmount, planId, { plaza, propertyType } = {
 }
 
 /**
- * Convierte renta + plan + plaza + tipo de inmueble en una "renta efectiva"
- * para el radar — el cobro real (`actualFeeForPlan`) reexpresado sobre la
- * tarifa de M3 (30%) para seguir siendo comparable contra las mismas capas.
- * Sin plan seleccionado, regresa la renta tal cual (sin ajuste).
+ * Cobro de la operación (antes de IVA) que usa el radar de firma física.
+ * Sin plan seleccionado se toma la renta a la tarifa base de M3 (30%), sin mínimo — igual que antes.
  */
-export function effectiveRentForPlan(rentAmount, planId, ctx = {}) {
+export function radarRevenue(rentAmount, planId, ctx = {}) {
   if (!rentAmount) return 0
   const fee = actualFeeForPlan(rentAmount, planId, ctx)
-  return fee == null ? rentAmount : fee / BASELINE_COST_PERCENT
+  return fee == null ? rentAmount * BASELINE_COST_PERCENT : fee
 }
