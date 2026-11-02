@@ -113,11 +113,7 @@
       "lng": -100.3635916,
       "geocodeMatch": "Pin de Google Maps confirmado por Santiago (place 'MoradaUno QRO')",
       "geocodePrecision": "exacta",
-      "confianza": "alta",
-      "soloMunicipio": {
-        "municipio": "Querétaro",
-        "estado": "Querétaro"
-      }
+      "confianza": "alta"
     },
     {
       "id": "oficina-tijuana",
@@ -184,11 +180,7 @@
       "lng": -100.359448,
       "geocodeMatch": "Calle Terminal de Autobuses, Santiago de Querétaro, Querétaro",
       "geocodePrecision": "aproximada (calle de la Terminal de Autobuses)",
-      "confianza": "alta",
-      "soloMunicipio": {
-        "municipio": "Querétaro",
-        "estado": "Querétaro"
-      }
+      "confianza": "alta"
     }
   ]
 }

@@ -49,7 +49,7 @@ export function indexPolygons(geojson) {
   return byKey
 }
 
-function ringContains(ring, x, y) {
+export function ringContains(ring, x, y) {
   let inside = false
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i]

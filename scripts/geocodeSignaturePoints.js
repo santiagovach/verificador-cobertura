@@ -85,7 +85,7 @@ async function main() {
     } else {
       const precisionNote = matchedQuery === queries[0] ? 'exacta' : `aproximada (matched: "${matchedQuery}")`
       console.log(`✅ ${found.lat}, ${found.lng} [${precisionNote}]`)
-      results.push({ id: point.id, nombre: point.nombre, tipo: point.tipo, direccion: point.direccion, lat: found.lat, lng: found.lng, geocodeMatch: found.displayName, geocodePrecision: precisionNote, ...(point.soloMunicipio && { soloMunicipio: point.soloMunicipio }) })
+      results.push({ id: point.id, nombre: point.nombre, tipo: point.tipo, direccion: point.direccion, lat: found.lat, lng: found.lng, geocodeMatch: found.displayName, geocodePrecision: precisionNote })
     }
   }
 

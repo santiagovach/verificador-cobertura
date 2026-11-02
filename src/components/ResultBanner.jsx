@@ -109,7 +109,8 @@ export default function ResultBanner({ result }) {
             {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
             {firmaFisicaRadar.tier != null && ` · capa ${TIER_LABELS[firmaFisicaRadar.tier]}`}
             {firmaFisicaRadar.tier > 0 && firmaFisicaRadar.uberEstimate != null && ` · Uber aprox. $${firmaFisicaRadar.uberEstimate.toLocaleString('es-MX')}`}
-            {firmaFisicaRadar.outsideZone && ` · fuera de la ciudad de ${firmaFisicaRadar.outsideZone} (Uber de firmas solo dentro)`}
+            {firmaFisicaRadar.qroSigningZone === true && ' · dentro de la zona de firmas QRO'}
+            {firmaFisicaRadar.qroSigningZone === false && ' · fuera de la zona de firmas QRO'}
             {firmaFisicaRadar.picError && ' · no se pudo consultar PIC (se evaluó sin PIC)'}
             {firmaFisicaRadar.isPIC && ' · PIC'}
             {firmaFisicaRadar.rentAmountRaw != null && ` · renta $${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')}`}

@@ -82,7 +82,7 @@ export function checkSignatureRadar(latlng, economics = {}) {
     covered: coverage.covered,
     tier: coverage.tier,
     distanceKm,
-    nearestPoint: { id: nearest.point.id, nombre: nearest.point.nombre, tipo: nearest.point.tipo, soloMunicipio: nearest.point.soloMunicipio ?? null },
+    nearestPoint: { id: nearest.point.id, nombre: nearest.point.nombre, tipo: nearest.point.tipo },
     isPIC: economics.isPIC ?? false,
     uberEstimate: coverage.uber,
     netRevenue: coverage.net,
@@ -90,15 +90,9 @@ export function checkSignatureRadar(latlng, economics = {}) {
   }
 }
 
-// Puntos con 'soloMunicipio' (QRO): el Uber de firmas solo se cubre dentro de ese municipio
-// (Zion, 2026-10-28), así que fuera de él no hay firma física gratis aunque esté a pocos km.
-// insideZone viene de pointInMunicipality: false = fuera; null (sin polígono) = se confía en la distancia.
-export function restrictToZone(radar, insideZone) {
-  if (!radar?.covered || insideZone !== false) return radar
-  return markNotCovered(radar, { outsideZone: radar.nearestPoint.soloMunicipio.municipio })
-}
-
-// Fuera de la zona (QRO) no hay capa gratis: si se cobra, es el Uber completo.
-function markNotCovered(radar, extra) {
-  return { ...radar, covered: false, tier: null, travelCharge: radar.uberEstimate, ...extra }
+// QRO (Zion, 2026-11-02): la firma presencial depende solo de su zona delimitada, sin costo
+// dentro y electrónica fuera — no aplican capas ni revenue. Ver src/lib/qroZones.js.
+export function applyQroSigningZone(radar, inSigningZone) {
+  if (!radar) return radar
+  return { ...radar, covered: inSigningZone, tier: null, qroSigningZone: inSigningZone, travelCharge: inSigningZone ? 0 : radar.uberEstimate }
 }

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import coverageData from '../data/coverage.json'
-import { checkSignatureRadar, restrictToZone } from '../lib/coverageRadius.js'
+import { checkSignatureRadar, applyQroSigningZone } from '../lib/coverageRadius.js'
+import { resolveQro, isQueretaroState } from '../lib/qroZones.js'
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
@@ -184,7 +185,7 @@ export function useSearch() {
       // resultado — sin ellos, se evalúa con el peor caso (renta $0, sin
       // PIC), que es exactamente lo que se necesita para decidir gratis vs.
       // tarifa. Ver src/lib/uberFareEstimate.js.
-      const resolveRadar = async (searchLat, searchLng, plaza) => {
+      const resolveRadar = async (searchLat, searchLng, plaza, { withPIC = true } = {}) => {
         if (searchLat == null || searchLng == null) return null
         const hasRentAmount = rentAmount != null && rentAmount !== '' && !Number.isNaN(rentAmount)
 
@@ -208,7 +209,7 @@ export function useSearch() {
         const landlordId = party?.type === 'landlord' ? party.id : undefined
         const brokerId = party?.type === 'broker' ? party.id : undefined
         const picCanMatter = radar && !radar.covered && radar.distanceKm > 6 && radar.distanceKm <= 25
-        if (picCanMatter && (landlordId || brokerId || organizationIds.length > 0)) {
+        if (withPIC && picCanMatter && (landlordId || brokerId || organizationIds.length > 0)) {
           try {
             const picResult = await checkPIC(accessToken, { landlordId, brokerId, organizationIds })
             if (picResult.isPIC) radar = checkSignatureRadar(point, { revenue: operationRevenue, isPIC: true })
@@ -217,10 +218,28 @@ export function useSearch() {
           }
         }
 
-        // Sin tolerancia de borde: Corregidora/El Marqués están pegados a la ciudad de Querétaro.
-        const zone = radar?.nearestPoint.soloMunicipio
-        if (zone) radar = restrictToZone(radar, await pointInMunicipality(zone, point, 0))
         return radar && { ...radar, picError, rentAmountRaw: hasRentAmount ? rentAmount : null, planId: planId || null, revenue }
+      }
+
+      // 0. Querétaro se decide con el mapa de Zion (src/lib/qroZones.js), no con el Sheet: zona
+      //    metropolitana con cobertura, zonas rojas sin servicio y firma presencial solo en su zona.
+      const qro = await resolveQro({ lat, lng })
+      if (qro?.red) {
+        setResult({ hasCoverage: false, nearCoverage: false, redZone: true, firmaFisicaRadar: null, cp, municipio: geocodedAdminMunicipio || geocodedMunicipio, estado: 'Querétaro', lat, lng })
+        return
+      }
+      if (qro) {
+        const radar = await resolveRadar(lat, lng, 'Querétaro', { withPIC: false })
+        setResult({
+          hasCoverage: true,
+          firmaFisicaRadar: applyQroSigningZone(radar, qro.inSigningZone),
+          cp,
+          municipio: qro.municipio,
+          estado: qro.estado,
+          lat,
+          lng,
+        })
+        return
       }
 
       // 1. Exact CP match
@@ -243,11 +262,14 @@ export function useSearch() {
       )
       const ownChecks = containment.slice(0, ownEntries.length)
       const blockChecks = containment.slice(ownEntries.length)
-      const exactEntry =
+      const sheetEntry =
         ownEntries[ownChecks.indexOf(true)] ||
         ownEntries[ownChecks.indexOf(null)] ||
         blockEntries[blockChecks.indexOf(true)] ||
         null
+      // QRO fuera de la zona metropolitana: sin cobertura aunque el Sheet lo traiga. Sin ubicación
+      // (Maps caído) no se puede validar y se confía en el Sheet.
+      const exactEntry = sheetEntry && isQueretaroState(sheetEntry.estado) && lat != null ? null : sheetEntry
       // 1b. Municipios por confirmar (San Quintín, San Felipe): todo el municipio, venga o no su CP
       //     en el Sheet, responde "por confirmar" en vez de sí/no.
       const pendingEntry = exactEntry && isPendingConfirmation(exactEntry.municipio, exactEntry.estado)

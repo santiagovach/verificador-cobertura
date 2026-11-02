@@ -1,9 +1,13 @@
 import coverageCentroidsData from '../data/coverageMunicipalityCentroids.json'
 import { haversineDistanceKm } from './coverageRadius.js'
 import { isPendingConfirmation } from '../data/pendingMunicipalities.js'
+import { isQueretaroState, isQroMetro } from './qroZones.js'
 
-// Los municipios por confirmar no cuentan como zona de cobertura cercana.
-const centroids = coverageCentroidsData.points.filter(p => p.lat != null && p.lng != null && !isPendingConfirmation(p.municipio, p.estado))
+// Los municipios por confirmar y los de QRO fuera de la zona metropolitana no cuentan como zona cercana.
+const centroids = coverageCentroidsData.points.filter(p =>
+  p.lat != null && p.lng != null && !isPendingConfirmation(p.municipio, p.estado) &&
+  (!isQueretaroState(p.estado) || isQroMetro(p.municipio, p.estado))
+)
 
 /**
  * Distancia (km) de un punto a la zona de cobertura de Protección más

@@ -3,6 +3,7 @@ import { Map, useMap, useApiIsLoaded, useApiLoadingStatus, APILoadingStatus } fr
 import signaturePointsData from '../data/signaturePoints.json'
 import coverageData from '../data/coverage.json'
 import { isPendingConfirmation } from '../data/pendingMunicipalities.js'
+import { QRO_SIGNING_ZONE, QRO_RED_ZONES, isQueretaroState, isQroMetro } from '../lib/qroZones.js'
 
 const SIGNATURE_POINTS = signaturePointsData.points.filter(p => p.lat != null && p.lng != null)
 
@@ -77,7 +78,8 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
       for (const f of features || []) {
         const municipio = f.getProperty('municipio')
         const estado = f.getProperty('estado')
-        if (!SHEET_MUNICIPALITIES.has(municipalityKey(municipio, estado)) || isPendingConfirmation(municipio, estado)) layer.remove(f)
+        const qroOutsideMetro = isQueretaroState(estado) && !isQroMetro(municipio, estado)
+        if (!SHEET_MUNICIPALITIES.has(municipalityKey(municipio, estado)) || isPendingConfirmation(municipio, estado) || qroOutsideMetro) layer.remove(f)
       }
       if (features && features.length > 0) setLoaded(true)
     })
@@ -102,8 +104,22 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
       if (municipio && estado) onMunicipalityClick?.(municipio, estado)
     })
 
+    // QRO (mapa de Zion): zonas rojas sin servicio y contorno de la zona de firma presencial.
+    const toPath = ring => ring.map(([lng, lat]) => ({ lat, lng }))
+    const qroShapes = [
+      ...QRO_RED_ZONES.map(ring => new g.Polygon({
+        map, paths: toPath(ring), clickable: false,
+        fillColor: '#DC2626', fillOpacity: 0.45, strokeColor: '#DC2626', strokeWeight: 1,
+      })),
+      new g.Polygon({
+        map, paths: toPath(QRO_SIGNING_ZONE), clickable: false,
+        fillOpacity: 0, strokeColor: '#0EA5E9', strokeWeight: 2, strokeOpacity: 0.9,
+      }),
+    ]
+
     return () => {
       layer.setMap(null)
+      qroShapes.forEach(s => s.setMap(null))
     }
   }, [map])
 
