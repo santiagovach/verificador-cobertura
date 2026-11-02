@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Map, useMap, useApiIsLoaded, useApiLoadingStatus, APILoadingStatus } from '@vis.gl/react-google-maps'
 import signaturePointsData from '../data/signaturePoints.json'
 import coverageData from '../data/coverage.json'
+import { isPendingConfirmation } from '../data/pendingMunicipalities.js'
 
 const SIGNATURE_POINTS = signaturePointsData.points.filter(p => p.lat != null && p.lng != null)
 
@@ -72,8 +73,11 @@ function CoverageLayer({ searchResult, onMunicipalityClick }) {
     layer.loadGeoJson('/coverage-municipalities.geojson', null, features => {
       // Solo se pintan los municipios que hoy tienen CPs en "Con Cobertura": el geojson
       // tenía municipios sin ningún CP (Chapala, Tequila...) que el buscador da sin cobertura.
+      // Los municipios por confirmar (src/data/pendingMunicipalities.js) tampoco se pintan.
       for (const f of features || []) {
-        if (!SHEET_MUNICIPALITIES.has(municipalityKey(f.getProperty('municipio'), f.getProperty('estado')))) layer.remove(f)
+        const municipio = f.getProperty('municipio')
+        const estado = f.getProperty('estado')
+        if (!SHEET_MUNICIPALITIES.has(municipalityKey(municipio, estado)) || isPendingConfirmation(municipio, estado)) layer.remove(f)
       }
       if (features && features.length > 0) setLoaded(true)
     })

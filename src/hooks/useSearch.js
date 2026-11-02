@@ -5,6 +5,7 @@ import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
 import { radarRevenue, actualFeeForPlan } from '../data/protectionPlans.js'
+import { PENDING_CONFIRMATION, isPendingConfirmation } from '../data/pendingMunicipalities.js'
 
 const CP_REGEX = /^\d{5}$/
 
@@ -247,6 +248,27 @@ export function useSearch() {
         ownEntries[ownChecks.indexOf(null)] ||
         blockEntries[blockChecks.indexOf(true)] ||
         null
+      // 1b. Municipios por confirmar (San Quintín, San Felipe): todo el municipio, venga o no su CP
+      //     en el Sheet, responde "por confirmar" en vez de sí/no.
+      const pendingEntry = exactEntry && isPendingConfirmation(exactEntry.municipio, exactEntry.estado)
+        ? exactEntry
+        : !exactEntry && lat != null
+          ? PENDING_CONFIRMATION[(await Promise.all(PENDING_CONFIRMATION.map(m => pointInMunicipality(m, { lat, lng }, 0)))).indexOf(true)]
+          : null
+      if (pendingEntry) {
+        setResult({
+          hasCoverage: false,
+          pendingConfirmation: true,
+          firmaFisicaRadar: requireProtectionCoverage(await resolveRadar(lat, lng, undefined, { withPIC: false })),
+          cp,
+          municipio: pendingEntry.municipio,
+          estado: pendingEntry.estado,
+          lat,
+          lng,
+        })
+        return
+      }
+
       if (exactEntry) {
         if (!lat && !lng) {
           const fallback = await geocodeOrNull(`${exactEntry.municipio}, ${exactEntry.estado}, México`)

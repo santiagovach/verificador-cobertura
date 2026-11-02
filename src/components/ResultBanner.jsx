@@ -4,7 +4,7 @@ import { CHARGE_TRAVEL } from '../lib/coverageRadius.js'
 export default function ResultBanner({ result }) {
   if (!result) return null
 
-  const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error, fromMapClick } = result
+  const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error, fromMapClick, pendingConfirmation } = result
 
   const TIER_LABELS = { 0: 'Garantizada (≤6 km)', 1: 'Estándar (6-15 km)', 2: 'Excepcional (15-25 km)' }
   const planLabel = firmaFisicaRadar?.planId
@@ -50,7 +50,7 @@ export default function ResultBanner({ result }) {
       }}
     >
       <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0, marginTop: '2px' }}>
-        {hasCoverage ? '✅' : '😕'}
+        {hasCoverage ? '✅' : pendingConfirmation ? '⏳' : '😕'}
       </span>
 
       <div style={{ flex: 1 }}>
@@ -66,7 +66,9 @@ export default function ResultBanner({ result }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '6px' }}>
           <span style={{ fontSize: '15px' }}>{hasCoverage ? '●' : '○'}</span>
           <p style={{ fontSize: '15px', fontWeight: '700', color: hasCoverage ? 'var(--mu-success)' : 'var(--mu-purple-dark)', fontFamily: 'var(--mu-font-ui)' }}>
-            {fromMapClick
+            {pendingConfirmation
+              ? <>En {location} la cobertura está <b>por confirmar</b>. Para más información, consulta con tu agente MoradaUno</>
+              : fromMapClick
               ? <>{location} tiene zonas con cobertura de Protección. Busca la dirección o el código postal para confirmar</>
               : hasCoverage
               ? <>En {location} están disponibles todas las Protecciones de MoradaUno, Servicios de Investigación y Firma de contratos</>
