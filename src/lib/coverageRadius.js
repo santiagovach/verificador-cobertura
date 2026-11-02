@@ -98,14 +98,7 @@ export function restrictToZone(radar, insideZone) {
   return markNotCovered(radar, { outsideZone: radar.nearestPoint.soloMunicipio.municipio })
 }
 
-// Sin cobertura de Protección no hay firma física gratis aunque haya un abogado cerca: el resultado
-// ofrece firma electrónica, igual que la línea de Protección (Santiago, 2026-10-30).
-export function requireProtectionCoverage(radar) {
-  if (!radar?.covered) return radar
-  return markNotCovered(radar, { withoutProtection: true })
-}
-
-// Fuera de la zona (QRO) o sin Protección no hay capa gratis: si se cobra, es el Uber completo.
+// Fuera de la zona (QRO) no hay capa gratis: si se cobra, es el Uber completo.
 function markNotCovered(radar, extra) {
   return { ...radar, covered: false, tier: null, travelCharge: radar.uberEstimate, ...extra }
 }

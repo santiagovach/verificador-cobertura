@@ -1,7 +1,10 @@
 // Municipios con CPs en "Con Cobertura" cuya cobertura todavía se está confirmando con el equipo
 // de la plaza: el buscador responde "por confirmar" (ni sí ni no) y el mapa no los pinta.
-// Santiago, 2026-11-02: San Quintín y San Felipe (BC) están a 240+ km de la oficina de Tijuana.
+// Santiago, 2026-11-02: en BC solo Tijuana, Rosarito y Tecate quedan con cobertura; el resto está
+// lejos de la oficina de Tijuana (Ensenada ~80 km, Mexicali ~140 km, San Quintín/San Felipe 240+ km).
 export const PENDING_CONFIRMATION = [
+  { municipio: 'Ensenada', estado: 'Baja California' },
+  { municipio: 'Mexicali', estado: 'Baja California' },
   { municipio: 'San Quintín', estado: 'Baja California' },
   { municipio: 'San Felipe', estado: 'Baja California' },
 ]

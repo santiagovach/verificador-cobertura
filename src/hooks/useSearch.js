@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import coverageData from '../data/coverage.json'
-import { checkSignatureRadar, restrictToZone, requireProtectionCoverage } from '../lib/coverageRadius.js'
+import { checkSignatureRadar, restrictToZone } from '../lib/coverageRadius.js'
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
@@ -184,7 +184,7 @@ export function useSearch() {
       // resultado — sin ellos, se evalúa con el peor caso (renta $0, sin
       // PIC), que es exactamente lo que se necesita para decidir gratis vs.
       // tarifa. Ver src/lib/uberFareEstimate.js.
-      const resolveRadar = async (searchLat, searchLng, plaza, { withPIC = true } = {}) => {
+      const resolveRadar = async (searchLat, searchLng, plaza) => {
         if (searchLat == null || searchLng == null) return null
         const hasRentAmount = rentAmount != null && rentAmount !== '' && !Number.isNaN(rentAmount)
 
@@ -208,7 +208,7 @@ export function useSearch() {
         const landlordId = party?.type === 'landlord' ? party.id : undefined
         const brokerId = party?.type === 'broker' ? party.id : undefined
         const picCanMatter = radar && !radar.covered && radar.distanceKm > 6 && radar.distanceKm <= 25
-        if (withPIC && picCanMatter && (landlordId || brokerId || organizationIds.length > 0)) {
+        if (picCanMatter && (landlordId || brokerId || organizationIds.length > 0)) {
           try {
             const picResult = await checkPIC(accessToken, { landlordId, brokerId, organizationIds })
             if (picResult.isPIC) radar = checkSignatureRadar(point, { revenue: operationRevenue, isPIC: true })
@@ -259,7 +259,8 @@ export function useSearch() {
         setResult({
           hasCoverage: false,
           pendingConfirmation: true,
-          firmaFisicaRadar: requireProtectionCoverage(await resolveRadar(lat, lng, undefined, { withPIC: false })),
+          // Sin cobertura de Protección no se ofrece firma física: ni línea en el banner ni anillos en el mapa.
+          firmaFisicaRadar: null,
           cp,
           municipio: pendingEntry.municipio,
           estado: pendingEntry.estado,
@@ -293,7 +294,8 @@ export function useSearch() {
         hasCoverage: false,
         nearCoverage: distanceToCoverageKm != null && distanceToCoverageKm <= 10,
         distanceToCoverageKm,
-        firmaFisicaRadar: requireProtectionCoverage(await resolveRadar(lat, lng, undefined, { withPIC: false })),
+        // Sin cobertura de Protección no se ofrece firma física: ni línea en el banner ni anillos en el mapa.
+          firmaFisicaRadar: null,
         cp,
         municipio: geocodedAdminMunicipio || geocodedMunicipio,
         estado: geocodedEstado,

@@ -1,7 +1,9 @@
 import coverageCentroidsData from '../data/coverageMunicipalityCentroids.json'
 import { haversineDistanceKm } from './coverageRadius.js'
+import { isPendingConfirmation } from '../data/pendingMunicipalities.js'
 
-const centroids = coverageCentroidsData.points.filter(p => p.lat != null && p.lng != null)
+// Los municipios por confirmar no cuentan como zona de cobertura cercana.
+const centroids = coverageCentroidsData.points.filter(p => p.lat != null && p.lng != null && !isPendingConfirmation(p.municipio, p.estado))
 
 /**
  * Distancia (km) de un punto a la zona de cobertura de Protección más

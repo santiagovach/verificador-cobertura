@@ -78,39 +78,38 @@ export default function ResultBanner({ result }) {
           </p>
         </div>
 
-        {/* Bullet 2: Cobertura de firma física — siempre se muestra. Fuera de la capa gratis se ofrece
+        {/* Bullet 2: Cobertura de firma física — solo cuando hay cobertura de Protección. Fuera de la capa gratis se ofrece
             firma electrónica; cuando GTM confirme cobrar el traslado (CHARGE_TRAVEL), se ofrece firma
             física cobrando solo lo que falta para no perder revenue (travelCharge, tope = Uber). */}
-        {!firmaFisicaRadar && !fromMapClick && (
+        {hasCoverage && !fromMapClick && !firmaFisicaRadar && (
           <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
             Cobertura de firma física: no se pudo calcular porque no se ubicó la dirección en el mapa. Consulta con tu agente MoradaUno
           </p>
         )}
-        {firmaFisicaRadar?.error && (
+        {hasCoverage && firmaFisicaRadar?.error && (
           <p style={{ fontSize: '13px', color: 'var(--mu-warning)', marginTop: '6px' }}>
             ⚠️ No se pudo calcular la cobertura de firma física: {firmaFisicaRadar.error}
           </p>
         )}
-        {firmaFisicaRadar && !firmaFisicaRadar.error && (
+        {hasCoverage && firmaFisicaRadar && !firmaFisicaRadar.error && (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '6px' }}>
             <span style={{ fontSize: '15px', color: firmaFisicaRadar.covered ? '#0284C7' : '#D97706' }}>●</span>
             <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered ? '#0284C7' : '#D97706', fontFamily: 'var(--mu-font-ui)' }}>
               Cobertura de firma física:{' '}
               {firmaFisicaRadar.covered
                 ? <>En {location} ofrecemos servicio de firma física <b>sin costo adicional</b></>
-                : CHARGE_TRAVEL && !firmaFisicaRadar.withoutProtection
+                : CHARGE_TRAVEL
                   ? <>En {location} ofrecemos firma física con un costo de traslado aproximado de <b>${firmaFisicaRadar.travelCharge.toLocaleString('es-MX')}</b>, o firma electrónica sin costo</>
                   : <>Por el momento podemos ofrecer firma electrónica. Para más información, consulta con tu agente MoradaUno</>}
             </p>
           </div>
         )}
-        {firmaFisicaRadar && !firmaFisicaRadar.error && (
+        {hasCoverage && firmaFisicaRadar && !firmaFisicaRadar.error && (
           <p style={{ fontSize: '12px', color: 'var(--mu-text-muted)', marginTop: '2px', marginLeft: '23px' }}>
             {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
             {firmaFisicaRadar.tier != null && ` · capa ${TIER_LABELS[firmaFisicaRadar.tier]}`}
             {firmaFisicaRadar.tier > 0 && firmaFisicaRadar.uberEstimate != null && ` · Uber aprox. $${firmaFisicaRadar.uberEstimate.toLocaleString('es-MX')}`}
             {firmaFisicaRadar.outsideZone && ` · fuera de la ciudad de ${firmaFisicaRadar.outsideZone} (Uber de firmas solo dentro)`}
-            {firmaFisicaRadar.withoutProtection && ' · sin cobertura de Protección'}
             {firmaFisicaRadar.picError && ' · no se pudo consultar PIC (se evaluó sin PIC)'}
             {firmaFisicaRadar.isPIC && ' · PIC'}
             {firmaFisicaRadar.rentAmountRaw != null && ` · renta $${firmaFisicaRadar.rentAmountRaw.toLocaleString('es-MX')}`}
