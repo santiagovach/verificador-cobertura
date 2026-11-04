@@ -106,7 +106,9 @@ export default function ResultBanner({ result }) {
         )}
         {hasCoverage && firmaFisicaRadar && !firmaFisicaRadar.error && (
           <p style={{ fontSize: '12px', color: 'var(--mu-text-muted)', marginTop: '2px', marginLeft: '23px' }}>
-            {firmaFisicaRadar.distanceKm} km de {firmaFisicaRadar.nearestPoint?.nombre}
+            {firmaFisicaRadar.distanceKm > 25 && firmaFisicaRadar.qroSigningZone == null
+              ? 'Sin punto de firma presencial a menos de 25 km'
+              : `${firmaFisicaRadar.distanceKm} km de ${firmaFisicaRadar.nearestPoint?.nombre}`}
             {firmaFisicaRadar.tier != null && ` · capa ${TIER_LABELS[firmaFisicaRadar.tier]}`}
             {firmaFisicaRadar.tier > 0 && firmaFisicaRadar.uberEstimate != null && ` · Uber aprox. $${firmaFisicaRadar.uberEstimate.toLocaleString('es-MX')}`}
             {firmaFisicaRadar.qroSigningZone === true && ' · dentro de la zona de firmas QRO'}

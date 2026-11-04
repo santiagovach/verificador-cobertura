@@ -28,7 +28,7 @@ const FIELD_LABEL_STYLE = {
   marginBottom: '6px',
 }
 
-export default function SearchBar({ onSearch, onClear, isLoading, accessToken }) {
+export default function SearchBar({ onSearch, onClear, isLoading, accessToken, resolvedPlaza }) {
   const [query, setQuery] = useState('')
   const [rentAmount, setRentAmount] = useState('')
   const [planId, setPlanId] = useState('')
@@ -86,11 +86,10 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
     rows.map(r => ({ id: r.id, primary: r.name, secondary: 'Inmobiliaria', raw: r }))
   ), [accessToken])
 
-  // Preview en vivo — plaza exacta se resuelve hasta buscar la dirección,
-  // así que este número usa CDMX como referencia y puede variar un poco
-  // una vez que se sepa la plaza real (los mínimos cambian por plaza).
+  // Revenue en vivo: antes de buscar usa CDMX como referencia; ya con resultado usa la plaza real de
+  // la dirección (los mínimos cambian por plaza), así coincide con el del resultado.
   const previewRevenue = rentAmount && planId
-    ? actualFeeForPlan(Number(rentAmount), Number(planId), { propertyType })
+    ? actualFeeForPlan(Number(rentAmount), Number(planId), { propertyType, plaza: resolvedPlaza || undefined })
     : null
 
   function buildOptions() {
@@ -109,6 +108,26 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
   const latestRef = useRef({})
   latestRef.current = { onSearch, buildOptions }
 
+  // Última dirección buscada: si después de buscar se llena renta, plan, tipo de inmueble, asesor o
+  // inmobiliaria, el resultado se recalcula solo (antes se quedaba con renta $0 hasta volver a dar
+  // Verificar). Espera a que se deje de teclear.
+  const lastQueryRef = useRef(null)
+  function runSearch(q) {
+    lastQueryRef.current = q
+    onSearch(q, buildOptions())
+  }
+  latestRef.current.runSearch = runSearch
+  const partyId = party ? `${party.type}:${party.id}` : ''
+  const agencyId = agency?.id ?? ''
+  useEffect(() => {
+    if (!lastQueryRef.current) return
+    const t = setTimeout(() => {
+      const q = lastQueryRef.current
+      if (q) latestRef.current.onSearch(q, { ...latestRef.current.buildOptions(), refresh: true })
+    }, 600)
+    return () => clearTimeout(t)
+  }, [rentAmount, planId, propertyType, partyId, agencyId])
+
   useEffect(() => {
     if (!places || !inputRef.current) return
 
@@ -122,7 +141,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
       const place = ac.getPlace()
       if (place?.formatted_address) {
         setQuery(place.formatted_address)
-        latestRef.current.onSearch(place.formatted_address, latestRef.current.buildOptions())
+        latestRef.current.runSearch(place.formatted_address)
       }
     })
 
@@ -142,7 +161,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
   function handleSubmit(e) {
     e.preventDefault()
     const trimmed = query.trim()
-    if (trimmed) onSearch(trimmed, buildOptions())
+    if (trimmed) runSearch(trimmed)
   }
 
   return (
@@ -209,7 +228,7 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
           {query && (
             <button
               type="button"
-              onClick={() => { setQuery(''); onClear?.(); inputRef.current?.focus() }}
+              onClick={() => { setQuery(''); lastQueryRef.current = null; onClear?.(); inputRef.current?.focus() }}
               aria-label="Limpiar búsqueda"
               style={{
                 position: 'absolute',
@@ -353,23 +372,15 @@ export default function SearchBar({ onSearch, onClear, isLoading, accessToken })
           </div>
           {previewRevenue != null && (
             <div>
-              <label style={FIELD_LABEL_STYLE}>Revenue</label>
-              <div
-                style={{
-                  height: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: 'var(--mu-radius-sm)',
-                  background: 'var(--mu-purple-primary)',
-                  color: '#fff',
-                  fontSize: '15px',
-                  fontWeight: '700',
-                  fontFamily: 'var(--mu-font-ui)',
-                  boxSizing: 'border-box',
-                }}
-              >
-                ${Math.round(previewRevenue).toLocaleString('es-MX')}
+              <span style={FIELD_LABEL_STYLE}>Revenue estimado</span>
+              {/* Dato informativo, no un botón: texto sin fondo ni borde */}
+              <div style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left' }}>
+                <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--mu-purple-dark)', fontFamily: 'var(--mu-font-ui)', lineHeight: 1.1 }}>
+                  ${Math.round(previewRevenue).toLocaleString('es-MX')}
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--mu-text-muted)', marginTop: '2px' }}>
+                  pago único antes de IVA{resolvedPlaza ? ` · ${resolvedPlaza}` : ' · ref. CDMX'}
+                </span>
               </div>
             </div>
           )}

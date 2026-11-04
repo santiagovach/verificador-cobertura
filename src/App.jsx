@@ -207,9 +207,11 @@ export default function App() {
           >
             <SearchBar
               onSearch={(query, opts) => {
-                trackUsage(user.accessToken, { event_type: 'action', action_name: 'search', path: '/' })
+                // Los recálculos por cambiar renta/plan/asesor no cuentan como búsqueda nueva.
+                if (!opts?.refresh) trackUsage(user.accessToken, { event_type: 'action', action_name: 'search', path: '/' })
                 return search(query, { ...opts, accessToken: user.accessToken })
               }}
+              resolvedPlaza={result?.plaza}
               onClear={clear}
               isLoading={isLoading}
               accessToken={user.accessToken}

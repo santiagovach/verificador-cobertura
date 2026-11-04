@@ -121,10 +121,21 @@ async function geocode(query, isCP = false) {
   }
 }
 
+// Caché de geocodificación por sesión: al recalcular (cambia la renta, el plan o el asesor) se
+// reusa la ubicación de la misma dirección en vez de volver a llamar a Google.
+const geocodeCache = new Map()
+async function geocodeCached(query, isCP = false) {
+  const k = `${isCP ? 'cp' : 'addr'}|${query}`
+  if (geocodeCache.has(k)) return geocodeCache.get(k)
+  const geo = await geocode(query, isCP)
+  if (geo) geocodeCache.set(k, geo)
+  return geo
+}
+
 // CP: sin Google igual se puede contestar la cobertura con el Sheet; solo falta la ubicación.
 async function geocodeOrNull(query, isCP) {
   try {
-    return await geocode(query, isCP)
+    return await geocodeCached(query, isCP)
   } catch (err) {
     if (err instanceof MapsUnavailableError) return null
     throw err
@@ -140,11 +151,13 @@ export function useSearch() {
   // renta o asesor) termina después — p. ej. por el check de PIC — ya no lo sobrescribe.
   const latestSearchRef = useRef(0)
 
-  const search = useCallback(async (query, { rentAmount, planId, propertyType, party, agency, accessToken } = {}) => {
+  // refresh: recálculo de la misma dirección porque cambió renta/plan/tipo/asesor — el resultado
+  // anterior se queda en pantalla hasta que llega el nuevo (sin parpadeo).
+  const search = useCallback(async (query, { rentAmount, planId, propertyType, party, agency, accessToken, refresh = false } = {}) => {
     const searchId = ++latestSearchRef.current
     const setResult = value => { if (searchId === latestSearchRef.current) setResultState(value) }
     setIsLoading(true)
-    setResult(null)
+    if (!refresh) setResult(null)
 
     try {
       let cp = null
@@ -165,7 +178,7 @@ export function useSearch() {
           geocodedEstado = geo.estado
         }
       } else {
-        const geo = await geocode(query)
+        const geo = await geocodeCached(query)
         if (!geo?.cp) {
           setResult({ error: 'No encontramos esa dirección. Prueba con un código postal de 5 dígitos.' })
           return
@@ -233,6 +246,7 @@ export function useSearch() {
         setResult({
           hasCoverage: true,
           firmaFisicaRadar: applyQroSigningZone(radar, qro.inSigningZone),
+          plaza: 'Querétaro',
           cp,
           municipio: qro.municipio,
           estado: qro.estado,
@@ -300,6 +314,7 @@ export function useSearch() {
         setResult({
           hasCoverage: true,
           firmaFisicaRadar: await resolveRadar(lat, lng, exactEntry.plaza),
+          plaza: exactEntry.plaza,
           cp,
           municipio: exactEntry.municipio,
           estado: exactEntry.estado,
@@ -317,7 +332,7 @@ export function useSearch() {
         nearCoverage: distanceToCoverageKm != null && distanceToCoverageKm <= 10,
         distanceToCoverageKm,
         // Sin cobertura de Protección no se ofrece firma física: ni línea en el banner ni anillos en el mapa.
-          firmaFisicaRadar: null,
+        firmaFisicaRadar: null,
         cp,
         municipio: geocodedAdminMunicipio || geocodedMunicipio,
         estado: geocodedEstado,
