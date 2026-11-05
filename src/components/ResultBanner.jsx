@@ -1,9 +1,11 @@
 import { PROTECTION_PLANS } from '../data/protectionPlans.js'
 import { CHARGE_TRAVEL, MAX_PAID_TRAVEL_KM } from '../lib/coverageRadius.js'
+import Toggle from './Toggle.jsx'
 
 // chargeTravel: simulación del cobro de traslado (switch de admin para la demo con GTM); por defecto
 // sigue la bandera CHARGE_TRAVEL.
-export default function ResultBanner({ result, chargeTravel = CHARGE_TRAVEL }) {
+// onToggleChargeTravel: solo admins — muestra el switch en la línea de firma física.
+export default function ResultBanner({ result, chargeTravel = CHARGE_TRAVEL, onToggleChargeTravel }) {
   if (!result) return null
 
   const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error, fromMapClick, pendingConfirmation } = result
@@ -15,9 +17,12 @@ export default function ResultBanner({ result, chargeTravel = CHARGE_TRAVEL }) {
   const location = municipio || estado || 'esta zona'
   // Firma física con costo: fuera de la capa gratis, hasta MAX_PAID_TRAVEL_KM. QRO no aplica: Zion
   // definió firma presencial solo dentro de su zona (fuera = electrónica).
-  const offersPaidTravel = chargeTravel && firmaFisicaRadar && !firmaFisicaRadar.covered &&
+  const paidTravelApplies = !!firmaFisicaRadar && !firmaFisicaRadar.covered &&
     firmaFisicaRadar.qroSigningZone == null && firmaFisicaRadar.distanceKm <= MAX_PAID_TRAVEL_KM &&
     firmaFisicaRadar.travelCharge > 0
+  const offersPaidTravel = chargeTravel && paidTravelApplies
+  // El switch solo aparece cuando prenderlo cambia el mensaje.
+  const showTravelToggle = !!onToggleChargeTravel && paidTravelApplies
 
   if (error) {
     return (
@@ -109,6 +114,15 @@ export default function ResultBanner({ result, chargeTravel = CHARGE_TRAVEL }) {
                   ? <>En {location} ofrecemos firma física con un costo de traslado aproximado de <b>${firmaFisicaRadar.travelCharge.toLocaleString('es-MX')}</b>, o firma electrónica sin costo</>
                   : <>Por el momento podemos ofrecer firma electrónica. Para más información, consulta con tu agente MoradaUno</>}
             </p>
+            {showTravelToggle && (
+              <span style={{ marginLeft: 'auto', alignSelf: 'center', paddingLeft: '12px' }}>
+                <Toggle
+                  checked={!!chargeTravel}
+                  onChange={onToggleChargeTravel}
+                  ariaLabel="Cobrar traslado de firma física"
+                />
+              </span>
+            )}
           </div>
         )}
         {hasCoverage && firmaFisicaRadar && !firmaFisicaRadar.error && (

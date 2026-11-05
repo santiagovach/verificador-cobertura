@@ -1,12 +1,14 @@
 // Switch estilo iOS.
-export default function Toggle({ checked, onChange, label }) {
+export default function Toggle({ checked, onChange, label, ariaLabel }) {
   return (
-    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
-      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--mu-text-muted)', fontFamily: 'var(--mu-font-ui)' }}>{label}</span>
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}>
+      {label && <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--mu-text-muted)', fontFamily: 'var(--mu-font-ui)' }}>{label}</span>}
       <button
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={ariaLabel || label}
+        title={ariaLabel || label}
         onClick={() => onChange(!checked)}
         style={{
           position: 'relative',
