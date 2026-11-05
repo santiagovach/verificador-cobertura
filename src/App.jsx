@@ -137,8 +137,10 @@ function LoginPrompt({ onSignIn, sessionExpired }) {
 
 export default function App() {
   const { user, isAdmin, signIn, signOut } = useAuth()
-  // Switch de admin para la demo con GTM: muestra cómo se vería cobrar el traslado de firma física.
+  // Switch de la demo con GTM (solo Santiago): muestra cómo se vería cobrar el traslado de firma
+  // física. El cobro real sigue apagado (CHARGE_TRAVEL) hasta que los líderes de GTM lo confirmen.
   const [chargeTravelDemo, setChargeTravelDemo] = useState(false)
+  const canSimulateTravelCharge = (user?.email || '').toLowerCase() === 'jorge@moradauno.com'
   const { result, isLoading, search, clear, selectMunicipality } = useSearch()
   const [showAdmin, setShowAdmin] = useState(false)
   const [sessionExpired, setSessionExpired] = useState(false)
@@ -221,8 +223,8 @@ export default function App() {
             {result && (
               <ResultBanner
                 result={result}
-                chargeTravel={isAdmin && chargeTravelDemo ? true : undefined}
-                onToggleChargeTravel={isAdmin ? setChargeTravelDemo : undefined}
+                chargeTravel={canSimulateTravelCharge && chargeTravelDemo ? true : undefined}
+                onToggleChargeTravel={canSimulateTravelCharge ? setChargeTravelDemo : undefined}
               />
             )}
             <MapErrorBoundary>
