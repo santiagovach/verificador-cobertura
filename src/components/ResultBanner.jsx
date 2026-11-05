@@ -1,7 +1,9 @@
 import { PROTECTION_PLANS } from '../data/protectionPlans.js'
-import { CHARGE_TRAVEL } from '../lib/coverageRadius.js'
+import { CHARGE_TRAVEL, MAX_PAID_TRAVEL_KM } from '../lib/coverageRadius.js'
 
-export default function ResultBanner({ result }) {
+// chargeTravel: simulación del cobro de traslado (switch de admin para la demo con GTM); por defecto
+// sigue la bandera CHARGE_TRAVEL.
+export default function ResultBanner({ result, chargeTravel = CHARGE_TRAVEL }) {
   if (!result) return null
 
   const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error, fromMapClick, pendingConfirmation } = result
@@ -11,6 +13,11 @@ export default function ResultBanner({ result }) {
     ? PROTECTION_PLANS.find(p => p.id === firmaFisicaRadar.planId)?.label
     : null
   const location = municipio || estado || 'esta zona'
+  // Firma física con costo: fuera de la capa gratis, hasta MAX_PAID_TRAVEL_KM. QRO no aplica: Zion
+  // definió firma presencial solo dentro de su zona (fuera = electrónica).
+  const offersPaidTravel = chargeTravel && firmaFisicaRadar && !firmaFisicaRadar.covered &&
+    firmaFisicaRadar.qroSigningZone == null && firmaFisicaRadar.distanceKm <= MAX_PAID_TRAVEL_KM &&
+    firmaFisicaRadar.travelCharge > 0
 
   if (error) {
     return (
@@ -93,12 +100,12 @@ export default function ResultBanner({ result }) {
         )}
         {hasCoverage && firmaFisicaRadar && !firmaFisicaRadar.error && (
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '6px' }}>
-            <span style={{ fontSize: '15px', color: firmaFisicaRadar.covered ? '#0284C7' : '#D97706' }}>●</span>
-            <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered ? '#0284C7' : '#D97706', fontFamily: 'var(--mu-font-ui)' }}>
+            <span style={{ fontSize: '15px', color: firmaFisicaRadar.covered || offersPaidTravel ? '#0284C7' : '#D97706' }}>●</span>
+            <p style={{ fontSize: '15px', fontWeight: '600', color: firmaFisicaRadar.covered || offersPaidTravel ? '#0284C7' : '#D97706', fontFamily: 'var(--mu-font-ui)' }}>
               Cobertura de firma física:{' '}
               {firmaFisicaRadar.covered
                 ? <>En {location} ofrecemos servicio de firma física <b>sin costo adicional</b></>
-                : CHARGE_TRAVEL
+                : offersPaidTravel
                   ? <>En {location} ofrecemos firma física con un costo de traslado aproximado de <b>${firmaFisicaRadar.travelCharge.toLocaleString('es-MX')}</b>, o firma electrónica sin costo</>
                   : <>Por el momento podemos ofrecer firma electrónica. Para más información, consulta con tu agente MoradaUno</>}
             </p>

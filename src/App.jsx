@@ -22,6 +22,7 @@ import CoverageMap from './components/CoverageMap.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import { useAuth } from './hooks/useAuth.js'
 import { useSearch } from './hooks/useSearch.js'
+import Toggle from './components/Toggle.jsx'
 import { trackUsage } from './utils/api.js'
 
 const CLICK_SELECTOR = 'button, a, [role="button"], [role="tab"], [role="menuitem"], [data-track]'
@@ -137,6 +138,8 @@ function LoginPrompt({ onSignIn, sessionExpired }) {
 
 export default function App() {
   const { user, isAdmin, signIn, signOut } = useAuth()
+  // Switch de admin para la demo con GTM: muestra cómo se vería cobrar el traslado de firma física.
+  const [chargeTravelDemo, setChargeTravelDemo] = useState(false)
   const { result, isLoading, search, clear, selectMunicipality } = useSearch()
   const [showAdmin, setShowAdmin] = useState(false)
   const [sessionExpired, setSessionExpired] = useState(false)
@@ -216,7 +219,16 @@ export default function App() {
               isLoading={isLoading}
               accessToken={user.accessToken}
             />
-            {result && <ResultBanner result={result} />}
+            {isAdmin && result && !result.error && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-8px' }}>
+                <Toggle
+                  checked={chargeTravelDemo}
+                  onChange={setChargeTravelDemo}
+                  label="Cobrar traslado de firma física"
+                />
+              </div>
+            )}
+            {result && <ResultBanner result={result} chargeTravel={isAdmin ? chargeTravelDemo || undefined : undefined} />}
             <MapErrorBoundary>
               <CoverageMap searchResult={result?.error ? null : result} onMunicipalityClick={selectMunicipality} />
             </MapErrorBoundary>

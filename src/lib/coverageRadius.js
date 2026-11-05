@@ -32,6 +32,9 @@ export function nearestSignaturePoint(latlng) {
 // Cobrar el traslado fuera de la capa gratis. APAGADO hasta que GTM lo confirme: mientras tanto,
 // fuera de la capa se ofrece firma electrónica y `travelCharge` solo se calcula.
 export const CHARGE_TRAVEL = false
+// Con cobro de traslado, firma física con costo solo hasta esta distancia del punto más cercano: más
+// lejos (p. ej. Monterrey, a cientos de km del abogado más cercano) se queda en firma electrónica.
+export const MAX_PAID_TRAVEL_KM = 50
 
 // Capas por distancia al punto más cercano, medidas en REVENUE NETO = lo que cobramos (antes de IVA)
 // menos el Uber ida y vuelta del abogado (Santiago, 2026-10-30): el viaje nunca se come el mínimo,
