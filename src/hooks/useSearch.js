@@ -347,6 +347,7 @@ export function useSearch() {
         lng,
       })
     } catch (err) {
+      console.error('[verificador] error al verificar', err)
       setResult({
         error: err instanceof MapsUnavailableError
           ? 'Google Maps no respondió, así que no pudimos ubicar la dirección. Intenta de nuevo en un momento o busca por código postal.'
