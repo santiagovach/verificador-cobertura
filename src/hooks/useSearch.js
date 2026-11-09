@@ -64,14 +64,14 @@ function findCoveredMunicipality(googleMunicipio, googleEstado) {
 class MapsUnavailableError extends Error {}
 
 async function geocode(query, isCP = false) {
+  // Se espera a Geocoder y no solo a google.maps: al abrir la página, google.maps existe antes de
+  // que cargue la librería de geocoding y una búsqueda rápida tronaba ("Geocoder is not a constructor").
   let g = window.google?.maps
-  if (!g) {
-    for (let i = 0; i < 20 && !g; i++) {
-      await new Promise(r => setTimeout(r, 150))
-      g = window.google?.maps
-    }
+  for (let i = 0; i < 40 && !g?.Geocoder; i++) {
+    await new Promise(r => setTimeout(r, 150))
+    g = window.google?.maps
   }
-  if (!g) throw new MapsUnavailableError()
+  if (!g?.Geocoder) throw new MapsUnavailableError()
 
   const geocoder = new g.Geocoder()
   const request = isCP
@@ -330,9 +330,21 @@ export function useSearch() {
       // El mapa pinta de morado todo municipio con al menos un CP con cobertura (mismo criterio que
       // CoverageLayer). Si el CP cae en uno de esos sin estar en el listado, el banner lo explica para
       // que el morado no se lea como "todo el municipio tiene cobertura" (caso Zapopan 45200).
-      const munName = geocodedAdminMunicipio || geocodedMunicipio
-      const inPaintedMunicipality = !!findCoveredMunicipality(munName, geocodedEstado) &&
-        !(isQueretaroState(geocodedEstado) && !isQroMetro(munName, geocodedEstado))
+      let munName = geocodedAdminMunicipio || geocodedMunicipio
+      let munEstado = geocodedEstado
+      let inPaintedMunicipality = !!munName && !!findCoveredMunicipality(munName, munEstado) &&
+        !(isQueretaroState(munEstado) && !isQroMetro(munName, munEstado))
+      // Google a veces devuelve el CP solo con el estado (45200 → "45200 Jalisco"): el municipio se
+      // saca del punto con los mismos polígonos morados del mapa.
+      if (!munName && lat != null) {
+        const hits = await Promise.all(coverageData.municipalities.map(m => pointInMunicipality(m, { lat, lng }, 0)))
+        const m = coverageData.municipalities[hits.indexOf(true)]
+        if (m && !(isQueretaroState(m.estado) && !isQroMetro(m.municipio, m.estado))) {
+          munName = m.municipio
+          munEstado = m.estado
+          inPaintedMunicipality = true
+        }
+      }
       setResult({
         hasCoverage: false,
         nearCoverage: distanceToCoverageKm != null && distanceToCoverageKm <= 10,
@@ -341,8 +353,8 @@ export function useSearch() {
         // Sin cobertura de Protección no se ofrece firma física: ni línea en el banner ni anillos en el mapa.
         firmaFisicaRadar: null,
         cp,
-        municipio: geocodedAdminMunicipio || geocodedMunicipio,
-        estado: geocodedEstado,
+        municipio: munName,
+        estado: munEstado,
         lat,
         lng,
       })
