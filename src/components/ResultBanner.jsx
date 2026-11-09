@@ -8,7 +8,7 @@ import Toggle from './Toggle.jsx'
 export default function ResultBanner({ result, chargeTravel = CHARGE_TRAVEL, onToggleChargeTravel }) {
   if (!result) return null
 
-  const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error, fromMapClick, pendingConfirmation } = result
+  const { hasCoverage, nearCoverage, firmaFisicaRadar, cp, municipio, estado, error, fromMapClick, pendingConfirmation, inPaintedMunicipality } = result
 
   const TIER_LABELS = { 0: 'Garantizada (≤6 km)', 1: 'Estándar (6-15 km)', 2: 'Excepcional (15-25 km)' }
   const planLabel = firmaFisicaRadar?.planId
@@ -84,6 +84,8 @@ export default function ResultBanner({ result, chargeTravel = CHARGE_TRAVEL, onT
               ? <>{location} tiene zonas con cobertura de Protección. Busca la dirección o el código postal para confirmar</>
               : hasCoverage
               ? <>En {location} están disponibles todas las Protecciones de MoradaUno, Servicios de Investigación y Firma de contratos</>
+              : inPaintedMunicipality && cp
+                ? <>{location} tiene cobertura de Protección solo en algunos códigos postales y el CP {cp} aún está fuera de esa zona. Aquí podemos ofrecer Servicios de investigación y Firma de contratos electrónico</>
               : nearCoverage
                 ? <>En {location} podemos ofrecer únicamente Servicios de investigación y Firma de contratos electrónico</>
                 : <>Seguimos trabajando juntos para ofrecerte nuestros productos y servicios. Para más información, consulta con tu agente MoradaUno.</>}

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import coverageData from '../data/coverage.json'
 import { checkSignatureRadar, applyQroSigningZone } from '../lib/coverageRadius.js'
-import { resolveQro, isQueretaroState } from '../lib/qroZones.js'
+import { resolveQro, isQueretaroState, isQroMetro } from '../lib/qroZones.js'
 import { distanceToNearestCoverage } from '../lib/coverageProximity.js'
 import { pointInMunicipality } from '../lib/municipalityContains.js'
 import { checkPIC } from '../utils/api.js'
@@ -327,9 +327,16 @@ export function useSearch() {
       // 2. No coverage — ni el CP ni su bloque de 10 (validado por polígono) están en
       //    "Con Cobertura". No hay fallback por municipio ni por prefijo más amplio.
       const distanceToCoverageKm = distanceToNearestCoverage({ lat, lng })
+      // El mapa pinta de morado todo municipio con al menos un CP con cobertura (mismo criterio que
+      // CoverageLayer). Si el CP cae en uno de esos sin estar en el listado, el banner lo explica para
+      // que el morado no se lea como "todo el municipio tiene cobertura" (caso Zapopan 45200).
+      const munName = geocodedAdminMunicipio || geocodedMunicipio
+      const inPaintedMunicipality = !!findCoveredMunicipality(munName, geocodedEstado) &&
+        !(isQueretaroState(geocodedEstado) && !isQroMetro(munName, geocodedEstado))
       setResult({
         hasCoverage: false,
         nearCoverage: distanceToCoverageKm != null && distanceToCoverageKm <= 10,
+        inPaintedMunicipality,
         distanceToCoverageKm,
         // Sin cobertura de Protección no se ofrece firma física: ni línea en el banner ni anillos en el mapa.
         firmaFisicaRadar: null,

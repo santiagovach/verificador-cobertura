@@ -354,6 +354,16 @@ function MapLoader({ searchResult, onMunicipalityClick }) {
       >
         <CoverageLayer searchResult={searchResult} onMunicipalityClick={onMunicipalityClick} />
       </Map>
+      {/* Leyenda: el morado es por municipio, pero la cobertura se confirma por CP */}
+      <div style={{
+        position: 'absolute', left: 12, bottom: 28, zIndex: 1, maxWidth: 'calc(100% - 24px)',
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '6px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.92)',
+        boxShadow: 'var(--mu-shadow)', fontSize: '12px', color: 'var(--mu-text-muted)', pointerEvents: 'none',
+      }}>
+        <span style={{ width: 12, height: 12, borderRadius: 3, flexShrink: 0, background: '#671E75', opacity: 0.4, border: '1px solid #671E75' }} />
+        Municipio con cobertura en al menos un código postal · confírmala buscando el CP
+      </div>
     </div>
   )
 }
